@@ -60,6 +60,27 @@ let count_nlrules : Sign.t -> int = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> acc + (nr_of_sym sy))
     Timed.(!(sign.sign_symbols)) 0
 
+(** [ho r] returns true if rule [r] contains higher order terms. *)
+let ho : Terms.rule -> bool = fun { lhs ; _ } ->
+  let rec ho te =
+    let open Terms in
+    match te with
+    | Appl(t, u) -> ho te || ho u
+    | Abst(_, _) -> true
+    | _          -> false in
+  List.exists ho lhs
+
+(** [count_horules s] counts the number of higher order rules in
+    signature [s]. *)
+let count_horules : Sign.t -> int = fun sign ->
+  let ho_of_sym (sy:Terms.sym) =
+    List.fold_left
+      (fun acc rul -> if ho rul then acc + 1 else acc)
+      0
+      Timed.(!(sy.sym_rules)) in
+  StrMap.fold (fun _ (sy, _) acc -> acc + (ho_of_sym sy))
+    Timed.(!(sign.sign_symbols)) 0
+
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -68,7 +89,8 @@ let of_file : string -> t = fun fname ->
   let sym_cardinal = count_symbols sign in
   let rul_cardinal = count_rules sign in
   let nlr_cardinal = count_nlrules sign in
-  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal }
+  let hor_cardinal = count_horules sign in
+  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal }
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt d ->
