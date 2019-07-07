@@ -47,7 +47,7 @@ let nonlin : Terms.rule -> bool = fun { lhs ; _ } ->
                   (function Terms.Patt(io, _, _) -> io | _ -> None) |>
                 List.of_seq in
   let slots_uniq = List.sort_uniq Int.compare slots in
-  List.compare_lengths slots slots_uniq = 0
+  List.compare_lengths slots slots_uniq <> 0
 
 (** [count_nlrules s] counts the number of non left linear rules in
     signature [s]. *)
