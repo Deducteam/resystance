@@ -65,7 +65,7 @@ let ho : Terms.rule -> bool = fun { lhs ; _ } ->
   let rec ho te =
     let open Terms in
     match te with
-    | Appl(t, u) -> ho te || ho u
+    | Appl(t, u) -> ho t || ho u
     | Abst(_, _) -> true
     | _          -> false in
   List.exists ho lhs
