@@ -13,9 +13,9 @@ type t =
   (** Number of nonlinear rules. *)
   ; hor_cardinal : int
   (** Number of higher order rules. *)
-  ; rul_size : int D.t
+  ; rul_size : D.aggregate
   (** Size distribution of the rules. *)
-  ; rul_height : int D.t
+  ; rul_height : D.aggregate
   (** Height distribution of the rules. *) }
   [@@deriving yojson]
 
@@ -24,8 +24,8 @@ let empty = { sym_cardinal = 0
             ; rul_cardinal = 0
             ; nlr_cardinal = 0
             ; hor_cardinal = 0
-            ; rul_size = D.init 0
-            ; rul_height = D.init 0 }
+            ; rul_size = D.compute D.init
+            ; rul_height = D.compute D.init }
 
 let compile = Compile.compile true
 
