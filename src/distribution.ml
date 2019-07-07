@@ -20,6 +20,7 @@ let init : t =
   { cardinal = 0 ; values = [] }
 
 let percentile : int -> t -> int = fun k { cardinal ; values ; _ } ->
+  if cardinal = 0 then 0 else
   let index = int_of_float ((float_of_int (k * cardinal)) /. 100.) in
   List.nth values index
 
