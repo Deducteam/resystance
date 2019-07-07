@@ -1,21 +1,7 @@
 open Core (* LambdaPi core *)
 open Extra
 
-(** Type of a distribution of values of type ['a]. *)
-type 'a distribution =
-  { percentile_25 : 'a
-  (** 25th percentile. *)
-  ; median : 'a
-  (** Median or 50th percentile. *)
-  ; average : 'a
-  (** Average *)
-  ; percentile_75 : 'a
-  (** 75th percentile. *) }
-  [@@deriving yojson]
-
-(** [init_distrib x] creates an empty distribution with value [x]. *)
-let init_distrib : 'a -> 'a distribution = fun x ->
-  { percentile_25 = x ; median = x ; average = x ; percentile_75 = x }
+module D = Distribution
 
 (** Type of data and statistics. *)
 type t =
@@ -27,9 +13,9 @@ type t =
   (** Number of nonlinear rules. *)
   ; hor_cardinal : int
   (** Number of higher order rules. *)
-  ; rul_size : int distribution
+  ; rul_size : int D.t
   (** Size distribution of the rules. *)
-  ; rul_height : int distribution
+  ; rul_height : int D.t
   (** Height distribution of the rules. *) }
   [@@deriving yojson]
 
@@ -38,8 +24,8 @@ let empty = { sym_cardinal = 0
             ; rul_cardinal = 0
             ; nlr_cardinal = 0
             ; hor_cardinal = 0
-            ; rul_size = init_distrib 0
-            ; rul_height = init_distrib 0 }
+            ; rul_size = D.init 0
+            ; rul_height = D.init 0 }
 
 let compile = Compile.compile true
 
