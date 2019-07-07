@@ -40,6 +40,26 @@ let count_rules : Sign.t -> int = fun sign ->
   StrMap.fold (fun _ (sy, _) -> (+) (rul_of_sym sy))
     Timed.(!(sign.sign_symbols)) 0
 
+(** [nonlin r] returns true if rule [r] is left nonlinear. *)
+let nonlin : Terms.rule -> bool = fun { lhs ; _ } ->
+  let slots = List.to_seq lhs |>
+                Seq.filter_map
+                  (function Terms.Patt(io, _, _) -> io | _ -> None) |>
+                List.of_seq in
+  let slots_uniq = List.sort_uniq Int.compare slots in
+  List.compare_lengths slots slots_uniq = 0
+
+(** [count_nlrules s] counts the number of non left linear rules in
+    signature [s]. *)
+let count_nlrules : Sign.t -> int = fun sign ->
+  let nr_of_sym (sy:Terms.sym) =
+    List.fold_left
+      (fun acc rul -> if nonlin rul then acc + 1 else acc)
+      0
+      Timed.(!(sy.sym_rules)) in
+  StrMap.fold (fun _ (sy, _) acc -> acc + (nr_of_sym sy))
+    Timed.(!(sign.sign_symbols)) 0
+
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -47,7 +67,8 @@ let of_file : string -> t = fun fname ->
   let sign = Files.PathMap.find mp Sign.(Timed.(!loaded)) in
   let sym_cardinal = count_symbols sign in
   let rul_cardinal = count_rules sign in
-  { empty with sym_cardinal ; rul_cardinal }
+  let nlr_cardinal = count_nlrules sign in
+  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal }
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt d ->
