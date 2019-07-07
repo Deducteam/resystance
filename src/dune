@@ -1,5 +1,5 @@
 (executable
  (name resystance)
  (public_name resystance)
- (libraries lambdapi ppx_deriving_yojson.runtime)
+ (libraries lambdapi.core ppx_deriving_yojson.runtime timed)
  (preprocess (pps ppx_deriving_yojson)))
