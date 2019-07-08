@@ -91,6 +91,28 @@ let rules_sizes : Sign.t -> D.t = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> (sizes_of_sym sy) @ acc)
     Timed.(!(sign.sign_symbols)) []
 
+(** [height_of_rules r] returns the height of rule [r]. *)
+let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
+  let open Terms in
+  (** [depth t] returns the depth of term [t] defined as
+      - [depth f t1 ... tn = 1 + max {depth t | t in t1 ... tn}]
+      - [depth x = 0]. *)
+  let rec depth : term -> int = function
+    | Appl(u, v) -> max (depth u + 1) (depth v + 1)
+    | Abst(_, u) -> let _, u = Bindlib.unbind u in
+      depth u + 1
+    | _          -> 0 in
+  depth (Basics.add_args Kind lhs)
+
+(** [rules_heights s] returns the distribution of heights of rules in
+    signature [s]. *)
+let rules_heights : Sign.t -> D.t = fun sign ->
+  let heights_of_sym (sy:Terms.sym) : int list =
+    List.map height_of_rule Timed.(!(sy.sym_rules)) in
+  D.of_list @@
+  StrMap.fold (fun _ (sy, _) acc -> heights_of_sym sy @ acc)
+    Timed.(!(sign.sign_symbols)) []
+
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -101,8 +123,9 @@ let of_file : string -> t = fun fname ->
   let nlr_cardinal = count_nlrules sign in
   let hor_cardinal = count_horules sign in
   let rul_size = rules_sizes sign |> D.compute in
-  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal
-  ; rul_size }
+  let rul_height = rules_heights sign |> D.compute in
+  { sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal
+  ; rul_size ; rul_height}
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt d ->
