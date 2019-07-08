@@ -1,0 +1,20 @@
+name: "ReSyStanCe"
+maintainer: ""
+author: ""
+homepage: ""
+bug-reports: ""
+license: ""
+dev-repo: "git+https://github.com/Deducteam/resystance.git"
+depends: [
+  "ocaml"
+  "seq"
+  "dune"
+  "lambdapi"
+  "bindlib" { >= "5.0.0" }
+  "timed" { >= "1.0" }
+
+  "yojson" { >= "1.6.0" }
+  "ppx_deriving_yojson"
+]
+build: [["dune" "build" "-p" name "-j" jobs]]
+install: ["dune" "install"]
