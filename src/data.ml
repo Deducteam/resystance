@@ -151,7 +151,10 @@ let aggregate : distributions -> agg_dist =
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
-  compile mp ;
+  begin let module C = Console in
+    try compile mp
+    with C.Fatal(None,    msg) -> C.exit_with "%s" msg
+       | C.Fatal(Some(p), msg) -> C.exit_with "[%a] %s" Pos.print p msg end ;
   let sign = Files.PathMap.find mp Sign.(Timed.(!loaded)) in
   let sig_inv =
     { sym = count_symbols sign
