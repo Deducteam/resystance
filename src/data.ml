@@ -189,5 +189,5 @@ let merge : t list -> t =
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
   let stats = aggregate sig_dist in
-  let num = { catalogue = sig_inv ; stats } in
-  num |> numeric_to_yojson |> Yojson.Safe.pretty_print fmt
+  { catalogue = sig_inv ; stats } |>
+  numeric_to_yojson |> Yojson.Safe.pretty_print fmt
