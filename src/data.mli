@@ -1,9 +1,6 @@
 (** Holds data and statistics. *)
 type t
 
-(** The empty dataset. *)
-val empty : t
-
 (** [of_file f] computes statistics from file [f]. *)
 val of_file : string -> t
 

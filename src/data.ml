@@ -3,29 +3,46 @@ open Extra
 
 module D = Distribution
 
-(** Type of data and statistics. *)
-type t =
-  { sym_cardinal : int
+(** Inventory of signature, i.e. number of elements in a
+    signature. *)
+type inventory =
+  { sym : int
   (** Number of symbols declared. *)
-  ; rul_cardinal : int
+  ; rul : int
   (** Number of rules declared. *)
-  ; nlr_cardinal : int
+  ; nlr : int
   (** Number of nonlinear rules. *)
-  ; hor_cardinal : int
-  (** Number of higher order rules. *)
-  ; rul_size : D.aggregate
-  (** Size distribution of the rules. *)
-  ; rul_height : D.aggregate
-  (** Height distribution of the rules. *) }
+  ; hor : int
+  (** Number of higher order rules. *) }
+[@@deriving yojson]
+
+(** The distributions built from a signature. *)
+type distributions =
+  { rul_size : D.t
+  (** Size of rules. *)
+  ; rul_height : D.t
+  (** Height of rules. *) }
+
+(** Contains aggregates of the distributions. *)
+type agg_dist =
+  { arul_size : D.aggregate
+  (** Aggregate of rules. *)
+  ; arul_height : D.aggregate
+  (** Aggregate of heights. *) }
   [@@deriving yojson]
 
-(** Initial data. *)
-let empty = { sym_cardinal = 0
-            ; rul_cardinal = 0
-            ; nlr_cardinal = 0
-            ; hor_cardinal = 0
-            ; rul_size = D.compute D.init
-            ; rul_height = D.compute D.init }
+(** Inventory along with distributions. *)
+type t =
+  { sig_inv : inventory
+  ; sig_dist : distributions }
+
+(** Ready to print data of a signature. *)
+type numeric =
+  { catalogue : inventory
+  (** Quantities *)
+  ; stats : agg_dist
+  (** Values computed from distributions. *) }
+[@@deriving yojson]
 
 let compile = Compile.compile true
 
@@ -118,15 +135,22 @@ let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
   compile mp ;
   let sign = Files.PathMap.find mp Sign.(Timed.(!loaded)) in
-  let sym_cardinal = count_symbols sign in
-  let rul_cardinal = count_rules sign in
-  let nlr_cardinal = count_nlrules sign in
-  let hor_cardinal = count_horules sign in
-  let rul_size = rules_sizes sign |> D.compute in
-  let rul_height = rules_heights sign |> D.compute in
-  { sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal
-  ; rul_size ; rul_height}
+  let sig_inv =
+    { sym = count_symbols sign
+    ; rul = count_rules sign
+    ; nlr = count_nlrules sign
+    ; hor = count_horules sign } in
+  let sig_dist =
+    { rul_height = rules_heights sign
+    ; rul_size = rules_sizes sign } in
+  { sig_inv ; sig_dist }
+
+let aggregate : distributions -> agg_dist =
+  fun { rul_size ; rul_height } ->
+  { arul_size = D.compute rul_size ; arul_height = D.compute rul_height }
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
-let pp : Format.formatter -> t -> unit = fun fmt d ->
-  d |> to_yojson |> Yojson.Safe.pretty_print fmt
+let pp : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
+  let stats = aggregate sig_dist in
+  let num = { catalogue = sig_inv ; stats } in
+  num |> numeric_to_yojson |> Yojson.Safe.pretty_print fmt
