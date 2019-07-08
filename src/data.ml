@@ -81,6 +81,16 @@ let count_horules : Sign.t -> int = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> acc + (ho_of_sym sy))
     Timed.(!(sign.sign_symbols)) 0
 
+(** [rules_sizes s] returns the distribution of sizes of the rules in
+    signature [s]. *)
+let rules_sizes : Sign.t -> D.t = fun sign ->
+  let open Terms in
+  let sizes_of_sym (sy:sym) : int list =
+    List.map (fun { lhs ; _ } -> List.length lhs) Timed.(!(sy.sym_rules)) in
+  D.of_list @@
+  StrMap.fold (fun _ (sy, _) acc -> (sizes_of_sym sy) @ acc)
+    Timed.(!(sign.sign_symbols)) []
+
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -90,7 +100,9 @@ let of_file : string -> t = fun fname ->
   let rul_cardinal = count_rules sign in
   let nlr_cardinal = count_nlrules sign in
   let hor_cardinal = count_horules sign in
-  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal }
+  let rul_size = rules_sizes sign |> D.compute in
+  { empty with sym_cardinal ; rul_cardinal ; nlr_cardinal ; hor_cardinal
+  ; rul_size }
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt d ->

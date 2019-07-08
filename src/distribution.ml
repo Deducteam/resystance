@@ -15,6 +15,9 @@ type aggregate =
   ; sd : float }
   [@@deriving yojson]
 
+(** [of_list l] creates a distribution from a list. *)
+let of_list : int list -> t = fun l -> { values = l ; cardinal = List.length l }
+
 (** [init x] creates an empty distribution with value [x]. *)
 let init : t =
   { cardinal = 0 ; values = [] }
