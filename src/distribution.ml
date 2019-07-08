@@ -19,9 +19,14 @@ type aggregate =
 (** [of_list l] creates a distribution from a list. *)
 let of_list : int list -> t = fun l -> { values = l ; cardinal = List.length l }
 
-(** [init x] creates an empty distribution with value [x]. *)
-let init : t =
+(** [init] creates an empty distribution with value [x]. *)
+let empty : t =
   { cardinal = 0 ; values = [] }
+
+(** [merge t u] merges two distributions [t] and [u] into one. *)
+let merge : t -> t -> t = fun a b ->
+  { cardinal = a.cardinal + b.cardinal
+  ; values = List.sort compare (a.values @ b.values) }
 
 let percentile : int -> t -> int = fun k { cardinal ; values ; _ } ->
   if cardinal = 0 then 0 else

@@ -44,6 +44,18 @@ type numeric =
   (** Values computed from distributions. *) }
 [@@deriving yojson]
 
+let empty_inventory : inventory =
+  { sym = 0
+  ; rul = 0
+  ; nlr = 0
+  ; hor = 0 }
+
+let empty_distributions : distributions =
+  { rul_size = D.empty
+  ; rul_height = D.empty }
+
+let empty = { sig_inv = empty_inventory ; sig_dist = empty_distributions }
+
 let compile = Compile.compile true
 
 (** [count_symbols s] counts the number of symbols declared in the
@@ -130,6 +142,12 @@ let rules_heights : Sign.t -> D.t = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> heights_of_sym sy @ acc)
     Timed.(!(sign.sign_symbols)) []
 
+(** [aggregate d] transforms distributions [d] into numerical
+    statistics. *)
+let aggregate : distributions -> agg_dist =
+  fun { rul_size ; rul_height } ->
+  { arul_size = D.compute rul_size ; arul_height = D.compute rul_height }
+
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -145,9 +163,25 @@ let of_file : string -> t = fun fname ->
     ; rul_size = rules_sizes sign } in
   { sig_inv ; sig_dist }
 
-let aggregate : distributions -> agg_dist =
-  fun { rul_size ; rul_height } ->
-  { arul_size = D.compute rul_size ; arul_height = D.compute rul_height }
+(** [inventory_merge i j] merges inventories [i] and [j] into one. *)
+let inventory_merge : inventory -> inventory -> inventory = fun i j ->
+  { sym = i.sym + j.sym
+  ; rul = i.rul + j.rul
+  ; nlr = i.nlr + j.nlr
+  ; hor = i.hor + j.hor }
+
+(** [distributions_merge d e] merges distributions [d] and [e] into one. *)
+let distributions_merge : distributions -> distributions -> distributions =
+  fun d e ->
+  { rul_size = D.merge d.rul_size e.rul_size
+  ; rul_height = D.merge d.rul_height e.rul_height }
+
+(** [merge d e] merge datasets [d] and [e] into one. *)
+let merge : t list -> t =
+  List.fold_left
+    (fun acc elt -> { sig_inv = inventory_merge acc.sig_inv elt.sig_inv
+                    ; sig_dist = distributions_merge acc.sig_dist
+                          elt.sig_dist }) empty
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->

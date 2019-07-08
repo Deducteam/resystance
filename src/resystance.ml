@@ -8,7 +8,9 @@ let _ =
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
   let stats = List.map Data.of_file (!files) in
-  List.iter
-    (Data.pp Format.std_formatter)
-    stats ;
+  let final = Data.merge stats in
+  Data.pp Format.std_formatter final ;
+  (* List.iter *)
+  (*   (Data.pp Format.std_formatter) *)
+  (*   stats ; *)
   print_newline ()
