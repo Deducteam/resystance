@@ -10,9 +10,10 @@ type t =
 (** Values computed from a distribution. *)
 type aggregate =
   { percentiles : int array
-                      (** Percentiles from 0 to 100. *)
+  (** Percentiles from 0 to 100. *)
   ; average : float
-  ; sd : float }
+  ; sd : float
+  (** Standard deviation. *)}
   [@@deriving yojson]
 
 (** [of_list l] creates a distribution from a list. *)
@@ -35,5 +36,5 @@ let compute : t -> aggregate = fun ({ values ; _ } as v) ->
   let percentiles = Array.init 100 (fun k -> percentile k v) in
   let avg = average v in
   let sqavg = average { v with values = List.map (fun x -> x * x) values } in
-  let sd = avg *. avg -. sqavg in
+  let sd = sqrt @@ sqavg -. avg *. avg in
   { percentiles ; average = avg ; sd }
