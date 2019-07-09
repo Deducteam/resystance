@@ -16,6 +16,22 @@ and then
 make install
 ```
 
+## Output
+The program outputs json with this semantics:
+- the field `catalogue` contains values that are counted:
+  - `sym` number of symbols,
+  - `rul` number of rules,
+  - `nlr` number of non left linear rules,
+  - `hor` number of rules with abstractions;
+- `stats` contains statistics coming from distributions,
+  - `arul_size` distribution of the size of the rules
+  - `arul_height` distribution of the height of the rules.
+  
+The statistics are
+- `percentiles` all the percentiles of the distribution,
+- `average` the name says it all,
+- `sd` the standard deviation.
+
 ## Example
 On the
 [dedukti library](https://github.com/rafoo/dklib/archive/v2.6.zip), 
