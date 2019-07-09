@@ -1,5 +1,6 @@
 open Core
 
+(** Whether to output as a csv line. *)
 let csv : bool ref = ref false
 
 let spec =

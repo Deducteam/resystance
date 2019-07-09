@@ -32,6 +32,9 @@ The statistics are
 - `average` the name says it all,
 - `sd` the standard deviation.
 
+## Options
+- `--csv` output as a csv line rather than a full json
+
 ## Example
 On the
 [dedukti library](https://github.com/rafoo/dklib/archive/v2.6.zip), 
