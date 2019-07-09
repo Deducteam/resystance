@@ -9,6 +9,8 @@ The tool can be compiled with dune with the dependencies
 - ppx\_deriving\_yojson
 - timed
 
+*Lambdapi must be compiled from sources.*  To have the latest version.
+
 and then
 ```
 make install
