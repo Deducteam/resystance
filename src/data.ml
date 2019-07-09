@@ -191,3 +191,16 @@ let pp : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
   let stats = aggregate sig_dist in
   { catalogue = sig_inv ; stats } |>
   numeric_to_yojson |> Yojson.Safe.pretty_print fmt
+
+(** [pp_csv f d] outputs a line in csv format containing some of the
+    information in a dataset. *)
+let pp_csv : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
+  let open Yojson.Safe.Util in
+  let stats = aggregate sig_dist in
+  let stj = { catalogue = sig_inv ; stats } |> numeric_to_yojson in
+  let sym = stj |> member "sym" |> to_int in
+  let rul = stj |> member "rul" |> to_int in
+  let nlr = stj |> member "nlr" |> to_int in
+  let hor = stj |> member "hor" |> to_int in
+  Format.fprintf fmt "%d, %d, %d, %d" sym rul nlr hor ;
+  print_newline ()
