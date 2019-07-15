@@ -127,11 +127,11 @@ let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
       - [depth f t1 ... tn = 1 + max {depth t | t in t1 ... tn}]
       - [depth x = 0]. *)
   let rec depth : term -> int = function
-    | Appl(u, v) -> max (depth u + 1) (depth v + 1)
+    | Appl(u, v) -> max (depth u) (depth v) + 1
     | Abst(_, u) -> let _, u = Bindlib.unbind u in
       depth u + 1
     | _          -> 0 in
-  depth (Basics.add_args Kind lhs)
+  depth (Basics.add_args Kind lhs) - 1
 
 (** [rules_heights s] returns the distribution of heights of rules in
     signature [s]. *)
