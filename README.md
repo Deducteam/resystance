@@ -34,6 +34,7 @@ The statistics are
 
 Data can be output as csv lines, where the fields are, from left to
 right
+- file name if used with `--separate`, or `N/A`,
 - number of symbols,
 - number of rules,
 - number of non left linear rules,
@@ -77,22 +78,22 @@ $ resystance !(dk_monads_coc.dk)
   }
 }
 $ resystance !(dk_monads_coc.dk) --separate
-23, 19, 0, 0
-15, 6, 0, 0
-5, 0, 0, 0
-5, 4, 0, 0
-6, 2, 0, 0
-47, 39, 0, 0
-12, 12, 1, 0
-31, 50, 0, 0
-61, 21, 0, 0
-13, 10, 0, 0
-0, 0, 0, 0
-22, 21, 0, 0
-1, 0, 0, 0
-70, 0, 0, 0
-10, 0, 0, 0
-13, 9, 0, 0
-23, 55, 0, 0
-4, 10, 0, 0
+slist.dk, 23, 19, 0, 0
+dk_type.dk, 15, 6, 0, 0
+dk_tuple.dk, 5, 0, 0, 0
+dk_string.dk, 5, 4, 0, 0
+dk_opt.dk, 6, 2, 0, 0
+dk_nat.dk, 47, 39, 0, 0
+dk_monads.dk, 12, 12, 1, 0
+dk_machine_int.dk, 31, 50, 0, 0
+dk_logic.dk, 61, 21, 0, 0
+dk_list.dk, 13, 10, 0, 0
+dklib.dk, 0, 0, 0, 0
+dk_int.dk, 22, 21, 0, 0
+dk_fail.dk, 1, 0, 0, 0
+dk_char.dk, 70, 0, 0, 0
+dk_builtins.dk, 10, 0, 0, 0
+dk_bool.dk, 13, 9, 0, 0
+dk_binary_nat.dk, 23, 55, 0, 0
+cc.dk, 4, 10, 0, 0
 ```
