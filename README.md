@@ -42,6 +42,7 @@ right
 
 ## Options
 - `--csv` output as a csv line rather than a full json
+- `--separate` output one csv line per input file
 
 ## Example
 On the
