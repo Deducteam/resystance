@@ -33,7 +33,8 @@ type agg_dist =
 
 (** Inventory along with distributions. *)
 type t =
-  { sig_inv : inventory
+  { fname : string option
+  ; sig_inv : inventory
   ; sig_dist : distributions }
 
 (** Ready to print data of a signature. *)
@@ -54,7 +55,8 @@ let empty_distributions : distributions =
   { rul_size = D.empty
   ; rul_height = D.empty }
 
-let empty = { sig_inv = empty_inventory ; sig_dist = empty_distributions }
+let empty = { fname = None ; sig_inv = empty_inventory
+            ; sig_dist = empty_distributions }
 
 let compile = Compile.compile true
 
@@ -164,7 +166,7 @@ let of_file : string -> t = fun fname ->
   let sig_dist =
     { rul_height = rules_heights sign
     ; rul_size = rules_sizes sign } in
-  { sig_inv ; sig_dist }
+  { fname = Some(fname) ; sig_inv ; sig_dist }
 
 (** [inventory_merge i j] merges inventories [i] and [j] into one. *)
 let inventory_merge : inventory -> inventory -> inventory = fun i j ->
@@ -182,25 +184,29 @@ let distributions_merge : distributions -> distributions -> distributions =
 (** [merge d e] merge datasets [d] and [e] into one. *)
 let merge : t list -> t =
   List.fold_left
-    (fun acc elt -> { sig_inv = inventory_merge acc.sig_inv elt.sig_inv
+    (fun acc elt -> { fname = None
+                    ; sig_inv = inventory_merge acc.sig_inv elt.sig_inv
                     ; sig_dist = distributions_merge acc.sig_dist
                           elt.sig_dist }) empty
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
-let pp : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
+let pp : Format.formatter -> t -> unit =
+  fun fmt { sig_dist ; sig_inv ; _ } ->
   let stats = aggregate sig_dist in
   { catalogue = sig_inv ; stats } |>
   numeric_to_yojson |> Yojson.Safe.pretty_print fmt
 
 (** [pp_csv f d] outputs a line in csv format containing some of the
     information in a dataset. *)
-let pp_csv : Format.formatter -> t -> unit = fun fmt { sig_dist ; sig_inv } ->
+let pp_csv : Format.formatter -> t -> unit =
+  fun fmt { fname ; sig_dist ; sig_inv } ->
   let open Yojson.Safe.Util in
   let stats = aggregate sig_dist in
   let stj = { catalogue = sig_inv ; stats } |> numeric_to_yojson in
+  let fnm = match fname with Some(s) -> s | None -> "N/A" in
   let cat = stj |> member "catalogue" in
   let sym = cat |> member "sym" |> to_int in
   let rul = cat |> member "rul" |> to_int in
   let nlr = cat |> member "nlr" |> to_int in
   let hor = cat |> member "hor" |> to_int in
-  Format.fprintf fmt "%d, %d, %d, %d" sym rul nlr hor
+  Format.fprintf fmt "%s, %d, %d, %d, %d" fnm sym rul nlr hor
