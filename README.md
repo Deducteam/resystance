@@ -32,6 +32,13 @@ The statistics are
 - `average` the name says it all,
 - `sd` the standard deviation.
 
+Data can be output as csv lines, where the fields are, from left to
+right
+- number of symbols,
+- number of rules,
+- number of non left linear rules,
+- number of rules with abstractions.
+
 ## Options
 - `--csv` output as a csv line rather than a full json
 
@@ -69,4 +76,23 @@ $ resystance !(dk_monads_coc.dk)
     }
   }
 }
+$ resystance !(dk_monads_coc.dk) --separate
+23, 19, 0, 0
+15, 6, 0, 0
+5, 0, 0, 0
+5, 4, 0, 0
+6, 2, 0, 0
+47, 39, 0, 0
+12, 12, 1, 0
+31, 50, 0, 0
+61, 21, 0, 0
+13, 10, 0, 0
+0, 0, 0, 0
+22, 21, 0, 0
+1, 0, 0, 0
+70, 0, 0, 0
+10, 0, 0, 0
+13, 9, 0, 0
+23, 55, 0, 0
+4, 10, 0, 0
 ```
