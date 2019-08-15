@@ -144,6 +144,28 @@ let rules_heights : Sign.t -> D.t = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> heights_of_sym sy @ acc)
     Timed.(!(sign.sign_symbols)) []
 
+(** [size_of_rule r] returns the size of the lhs of [r], the size
+ ** being the number of (sub) terms. *)
+let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
+  let open Terms in
+  let rec sot : term -> int = function
+    | Appl(u, v)    -> (sot u) + (sot v)
+    | Abst(_, u)    -> let _, u = Bindlib.unbind u in sot u + 1
+    | Symb(_, _)    -> 1
+    | Vari(_)       -> 1
+    | Patt(_, _, _) -> 1
+    | _             -> assert false in
+  sot (Basics.add_args Kind lhs) - 1
+
+(** [rules_size s] returns the distribution of sizes of rules in
+ ** signature [s]. *)
+let rules_size : Sign.t -> D.t = fun sign ->
+  let sizes_of_sym sy =
+    List.map size_of_rule Timed.(Terms.(!(sy.sym_rules))) in
+  D.of_list @@
+    StrMap.fold (fun _ (sy, _) acc -> sizes_of_sym sy @ acc)
+  Timed.(!(sign.sign_symbols)) []
+
 (** [aggregate d] transforms distributions [d] into numerical
     statistics. *)
 let aggregate : distributions -> agg_dist =
