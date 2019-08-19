@@ -7,17 +7,13 @@ type t =
   ; values : int list
   (** Values of the distribution. *) }
 
-(** Values computed from a distribution. *)
-type aggregate =
-  { percentiles : int array
-  (** Percentiles from 0 to 100. *)
-  ; average : float
-  ; sd : float
-  (** Standard deviation. *)}
-  [@@deriving yojson]
+(** [distribution d] is a smart constructor. *)
+let distribution : t -> t = fun d ->
+  { values = List.sort (+) d.values ; cardinal = d.cardinal }
 
 (** [of_list l] creates a distribution from a list. *)
-let of_list : int list -> t = fun l -> { values = l ; cardinal = List.length l }
+let of_list : int list -> t = fun l ->
+  distribution { values = l ; cardinal = List.length l }
 
 (** [init] creates an empty distribution with value [x]. *)
 let empty : t =
@@ -25,8 +21,8 @@ let empty : t =
 
 (** [merge t u] merges two distributions [t] and [u] into one. *)
 let merge : t -> t -> t = fun a b ->
-  { cardinal = a.cardinal + b.cardinal
-  ; values = List.sort compare (a.values @ b.values) }
+  distribution { cardinal = a.cardinal + b.cardinal
+               ; values = a.values @ b.values }
 
 let percentile : int -> t -> int = fun k { cardinal ; values ; _ } ->
   if cardinal = 0 then 0 else

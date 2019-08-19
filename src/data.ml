@@ -3,60 +3,31 @@ open Extra
 
 module D = Distribution
 
-(** Inventory of signature, i.e. number of elements in a
-    signature. *)
-type inventory =
-  { sym : int
-  (** Number of symbols declared. *)
-  ; rul : int
-  (** Number of rules declared. *)
-  ; nlr : int
-  (** Number of nonlinear rules. *)
-  ; hor : int
-  (** Number of higher order rules. *) }
-[@@deriving yojson]
-
-(** The distributions built from a signature. *)
-type distributions =
-  { rul_size : D.t
-  (** Size of rules. *)
-  ; rul_height : D.t
-  (** Height of rules. *) }
-
-(** Contains aggregates of the distributions. *)
-type agg_dist =
-  { arul_size : D.aggregate
-  (** Aggregate of rules. *)
-  ; arul_height : D.aggregate
-  (** Aggregate of heights. *) }
-  [@@deriving yojson]
-
-(** Inventory along with distributions. *)
+(** A record containing all data from a file (or several files). *)
 type t =
   { fname : string option
-  ; sig_inv : inventory
-  ; sig_dist : distributions }
+  (** Filename if separated output *)
+  ; sym : int
+  (** Number of symbols declared *)
+  ; rul : int
+  (** Number of rules declared *)
+  ; nlr : int
+  (** Number of nonlinear rules *)
+  ; hor : int
+  (** Number of higher order rules *)
+  ; siz : D.t
+  (** Distribution of the size of the rules *)
+  ; hgt : D.t
+  (** Distribution of the height of the rules. *) }
 
-(** Ready to print data of a signature. *)
-type numeric =
-  { catalogue : inventory
-  (** Quantities *)
-  ; stats : agg_dist
-  (** Values computed from distributions. *) }
-[@@deriving yojson]
-
-let empty_inventory : inventory =
-  { sym = 0
+let empty : t =
+  { fname = None
+  ; sym = 0
   ; rul = 0
   ; nlr = 0
-  ; hor = 0 }
-
-let empty_distributions : distributions =
-  { rul_size = D.empty
-  ; rul_height = D.empty }
-
-let empty = { fname = None ; sig_inv = empty_inventory
-            ; sig_dist = empty_distributions }
+  ; hor = 0
+  ; siz = D.empty
+  ; hgt = D.empty }
 
 let compile = Compile.compile true
 
@@ -125,9 +96,9 @@ let rules_sizes : Sign.t -> D.t = fun sign ->
 (** [height_of_rules r] returns the height of rule [r]. *)
 let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
   let open Terms in
-  (** [depth t] returns the depth of term [t] defined as
-      - [depth f t1 ... tn = 1 + max {depth t | t in t1 ... tn}]
-      - [depth x = 0]. *)
+  (* [depth t] returns the depth of term [t] defined as
+     - [depth f t1 ... tn = 1 + max {depth t | t in t1 ... tn}]
+     - [depth x = 0]. *)
   let rec depth : term -> int = function
     | Appl(u, v) -> max (depth u) (depth v) + 1
     | Abst(_, u) -> let _, u = Bindlib.unbind u in
@@ -166,12 +137,6 @@ let rules_size : Sign.t -> D.t = fun sign ->
     StrMap.fold (fun _ (sy, _) acc -> sizes_of_sym sy @ acc)
   Timed.(!(sign.sign_symbols)) []
 
-(** [aggregate d] transforms distributions [d] into numerical
-    statistics. *)
-let aggregate : distributions -> agg_dist =
-  fun { rul_size ; rul_height } ->
-  { arul_size = D.compute rul_size ; arul_height = D.compute rul_height }
-
 (** [of_file f] computes statistics on rules of file [f]. *)
 let of_file : string -> t = fun fname ->
   let mp = Files.module_path fname in
@@ -180,55 +145,24 @@ let of_file : string -> t = fun fname ->
     with C.Fatal(None,    msg) -> C.exit_with "%s" msg
        | C.Fatal(Some(p), msg) -> C.exit_with "[%a] %s" Pos.print p msg end ;
   let sign = Files.PathMap.find mp Sign.(Timed.(!loaded)) in
-  let sig_inv =
-    { sym = count_symbols sign
-    ; rul = count_rules sign
-    ; nlr = count_nlrules sign
-    ; hor = count_horules sign } in
-  let sig_dist =
-    { rul_height = rules_heights sign
-    ; rul_size = rules_sizes sign } in
-  { fname = Some(fname) ; sig_inv ; sig_dist }
+  { fname = Some(fname)
+  ; sym = count_symbols sign
+  ; rul = count_rules sign
+  ; nlr = count_nlrules sign
+  ; hor = count_horules sign
+  ; siz = rules_size sign
+  ; hgt = rules_heights sign }
 
-(** [inventory_merge i j] merges inventories [i] and [j] into one. *)
-let inventory_merge : inventory -> inventory -> inventory = fun i j ->
-  { sym = i.sym + j.sym
-  ; rul = i.rul + j.rul
-  ; nlr = i.nlr + j.nlr
-  ; hor = i.hor + j.hor }
+(** [merge d e] merges datasets [d] and [e] into one. *)
+let merge : t -> t -> t = assert false
 
-(** [distributions_merge d e] merges distributions [d] and [e] into one. *)
-let distributions_merge : distributions -> distributions -> distributions =
-  fun d e ->
-  { rul_size = D.merge d.rul_size e.rul_size
-  ; rul_height = D.merge d.rul_height e.rul_height }
-
-(** [merge d e] merge datasets [d] and [e] into one. *)
-let merge : t list -> t =
-  List.fold_left
-    (fun acc elt -> { fname = None
-                    ; sig_inv = inventory_merge acc.sig_inv elt.sig_inv
-                    ; sig_dist = distributions_merge acc.sig_dist
-                          elt.sig_dist }) empty
+(** [csv_hdr f] outputs a csv header to formatter [f]. *)
+let csv_hdr : Format.formatter -> unit = fun fmt ->
+  Format.fprintf fmt "%s" ""
 
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
-let pp : Format.formatter -> t -> unit =
-  fun fmt { sig_dist ; sig_inv ; _ } ->
-  let stats = aggregate sig_dist in
-  { catalogue = sig_inv ; stats } |>
-  numeric_to_yojson |> Yojson.Safe.pretty_print fmt
+let pp : Format.formatter -> t -> unit = assert false
 
 (** [pp_csv f d] outputs a line in csv format containing some of the
     information in a dataset. *)
-let pp_csv : Format.formatter -> t -> unit =
-  fun fmt { fname ; sig_dist ; sig_inv } ->
-  let open Yojson.Safe.Util in
-  let stats = aggregate sig_dist in
-  let stj = { catalogue = sig_inv ; stats } |> numeric_to_yojson in
-  let fnm = match fname with Some(s) -> s | None -> "N/A" in
-  let cat = stj |> member "catalogue" in
-  let sym = cat |> member "sym" |> to_int in
-  let rul = cat |> member "rul" |> to_int in
-  let nlr = cat |> member "nlr" |> to_int in
-  let hor = cat |> member "hor" |> to_int in
-  Format.fprintf fmt "%s, %d, %d, %d, %d" fnm sym rul nlr hor
+let pp_csv : Format.formatter -> t -> unit = assert false
