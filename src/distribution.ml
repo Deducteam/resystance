@@ -32,10 +32,8 @@ let percentile : int -> t -> int = fun k { cardinal ; values ; _ } ->
 let average : t -> float = fun d ->
   (float_of_int (List.fold_left (+) 0 d.values)) /. (float_of_int d.cardinal)
 
-(** [compute d] computes statistics on distribution [d]. *)
-let compute : t -> aggregate = fun ({ values ; _ } as v) ->
-  let percentiles = Array.init 100 (fun k -> percentile k v) in
-  let avg = average v in
-  let sqavg = average { v with values = List.map (fun x -> x * x) values } in
-  let sd = sqrt @@ sqavg -. avg *. avg in
-  { percentiles ; average = avg ; sd }
+(** [sd d] computes the standard deviation of [d]. *)
+let sd : t -> float = fun ({ values ; _ } as d) ->
+  let avg = average d in
+  let sqavg = average { d with values = List.map (fun x -> x * x) values } in
+  sqrt @@ sqavg -. avg *. avg
