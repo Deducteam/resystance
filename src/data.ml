@@ -118,6 +118,8 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
     | Symb(_, _)    -> 1
     | Vari(_)       -> 1
     | Patt(_, _, _) -> 1
+    | Meta(_, _)    -> 1
+    | Kind          -> 0 (* Really? *)
     | _             -> assert false in
   sot (Basics.add_args Kind lhs) - 1
 
@@ -171,15 +173,15 @@ let merge : t -> t -> t = fun d e ->
 (** [pp f d] pretty prints data [d] to formatter [f]. *)
 let pp : Format.formatter -> t -> unit = fun fmt d ->
   let module F = Format in
-  F.fprintf fmt "SUMMARY:\n" ;
-  F.fprintf fmt "@[<v 2>" ;
+  F.fprintf fmt "@[<v>SUMMARY@," ;
   begin match d.fname with
   | Some(n) -> F.fprintf fmt "File: %s@," n
   | None    -> () end ;
-  F.fprintf fmt "Symbols: %d@," d.sym ;
-  F.fprintf fmt "Rules: %d@," d.rul ;
+  F.fprintf fmt "Symbols         : %d@," d.sym ;
+  F.fprintf fmt "Rules           : %d@," d.rul ;
   F.fprintf fmt "Non linear rules: %d@," d.nlr ;
-  F.fprintf fmt "HO rules: %d@," d.hor
+  F.fprintf fmt "HO rules        : %d" d.hor ;
+  F.fprintf fmt "@]@."
 
 (** [csv_hdr f] outputs a csv header to formatter [f]. *)
 let csv_hdr : Format.formatter -> unit = fun fmt ->

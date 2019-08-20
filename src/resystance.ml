@@ -29,5 +29,5 @@ let _ =
   if !separate then
     List.iter (F.fprintf ppf "%a\n" pp) stats
   else
-    let into_one = List.fold_right Data.merge stats Data.empty in
-    F.fprintf ppf "%a\n" pp into_one
+    List.fold_right Data.merge stats Data.empty |>
+    F.fprintf ppf "%a\n" pp
