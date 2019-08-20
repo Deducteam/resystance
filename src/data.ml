@@ -186,16 +186,20 @@ let pp : Format.formatter -> t -> unit = fun fmt d ->
   F.fprintf fmt "HO rules        : %d" d.hor ;
   F.fprintf fmt "@]@."
 
-let csv_hdr : string =
-  String.concat csv_sep
-    ["File"; "Symbols"; "Rules"; "NL_rules"; "HO_rules"; "Size_avg";
-     "Height_avg"]
-
 (** [csv_hdr_distrib l] returns the csv header containing column
  ** fields for distributions prefixed by a label. *)
 let csv_hdr_distrib : string -> string = fun label ->
   List.map ((^) label) ["_avg"; "_25th_pct"; "_med"; "_75th_pct"] |>
   String.concat csv_sep
+
+let csv_hdr : string =
+  let main =
+    String.concat csv_sep
+      ["File"; "Symbols"; "Rules"; "NL_rules"; "HO_rules"] in
+  let ari = csv_hdr_distrib "Arity" in
+  let siz = csv_hdr_distrib "Size" in
+  let hgt = csv_hdr_distrib "Height" in
+  main ^ ari ^ hgt ^ siz
 
 (** [pp_distr_csv fmt distr] pretty prints distribution [distr] to
  ** formatter [fmt]. *)
@@ -213,6 +217,13 @@ let pp_csv : Format.formatter -> t -> unit = fun fmt d ->
   let module F = Format in
   let fname = match d.fname with Some(f) -> f | None -> "N/A" in
   let pp_sep fmt () = F.pp_print_string fmt csv_sep in
-  F.fprintf fmt "%s%s%a" fname csv_sep
-    (F.pp_print_list ~pp_sep F.pp_print_int)
-    [d.sym; d.rul; d.nlr; d.hor]
+  F.fprintf fmt "%s%s%a%s%a%s%a%s%a"
+    fname
+    csv_sep
+    (F.pp_print_list ~pp_sep F.pp_print_int) [d.sym; d.rul; d.nlr; d.hor]
+    csv_sep
+    pp_distr_csv d.ari
+    csv_sep
+    pp_distr_csv d.hgt
+    csv_sep
+    pp_distr_csv d.siz
