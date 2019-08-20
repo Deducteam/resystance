@@ -15,6 +15,8 @@ type t =
   (** Number of nonlinear rules *)
   ; hor : int
   (** Number of higher order rules *)
+  ; ari : D.t
+  (** Distribution of the arity of rules*)
   ; siz : D.t
   (** Distribution of the size of the rules *)
   ; hgt : D.t
@@ -26,6 +28,7 @@ let empty : t =
   ; rul = 0
   ; nlr = 0
   ; hor = 0
+  ; ari = D.empty
   ; siz = D.empty
   ; hgt = D.empty }
 
@@ -83,16 +86,6 @@ let count_horules : Sign.t -> int = fun sign ->
   StrMap.fold (fun _ (sy, _) acc -> acc + (ho_of_sym sy))
     Timed.(!(sign.sign_symbols)) 0
 
-(** [rules_sizes s] returns the distribution of sizes of the rules in
-    signature [s]. *)
-let rules_sizes : Sign.t -> D.t = fun sign ->
-  let open Terms in
-  let sizes_of_sym (sy:sym) : int list =
-    List.map (fun { lhs ; _ } -> List.length lhs) Timed.(!(sy.sym_rules)) in
-  D.of_list @@
-  StrMap.fold (fun _ (sy, _) acc -> (sizes_of_sym sy) @ acc)
-    Timed.(!(sign.sign_symbols)) []
-
 (** [height_of_rules r] returns the height of rule [r]. *)
 let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
   let open Terms in
@@ -128,9 +121,19 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
     | _             -> assert false in
   sot (Basics.add_args Kind lhs) - 1
 
+(** [rules_arity s] returns the distribution of the arity of the root symbol
+    of the rules in signature [s]. *)
+let rules_arity : Sign.t -> D.t = fun sign ->
+  let open Terms in
+  let sizes_of_sym (sy:sym) : int list =
+    List.map (fun { lhs ; _ } -> List.length lhs) Timed.(!(sy.sym_rules)) in
+  D.of_list @@
+  StrMap.fold (fun _ (sy, _) acc -> (sizes_of_sym sy) @ acc)
+    Timed.(!(sign.sign_symbols)) []
+
 (** [rules_size s] returns the distribution of sizes of rules in
  ** signature [s]. *)
-let rules_size : Sign.t -> D.t = fun sign ->
+let rules_sizes : Sign.t -> D.t = fun sign ->
   let sizes_of_sym sy =
     List.map size_of_rule Timed.(Terms.(!(sy.sym_rules))) in
   D.of_list @@
@@ -150,7 +153,8 @@ let of_file : string -> t = fun fname ->
   ; rul = count_rules sign
   ; nlr = count_nlrules sign
   ; hor = count_horules sign
-  ; siz = rules_size sign
+  ; ari = rules_arity sign
+  ; siz = rules_sizes sign
   ; hgt = rules_heights sign }
 
 (** [merge d e] merges datasets [d] and [e] into one. *)
@@ -160,16 +164,30 @@ let merge : t -> t -> t = fun d e ->
   ; rul = d.rul + e.rul
   ; nlr = d.nlr + e.nlr
   ; hor = d.hor + e.hor
+  ; ari = D.merge d.ari e.ari
   ; siz = D.merge d.siz e.siz
   ; hgt = D.merge d.hgt e.hgt }
+
+(** [pp f d] pretty prints data [d] to formatter [f]. *)
+let pp : Format.formatter -> t -> unit = fun fmt d ->
+  let module F = Format in
+  F.fprintf fmt "SUMMARY:\n" ;
+  F.fprintf fmt "@[<v 2>" ;
+  begin match d.fname with
+  | Some(n) -> F.fprintf fmt "File: %s@," n
+  | None    -> () end ;
+  F.fprintf fmt "Symbols: %d@," d.sym ;
+  F.fprintf fmt "Rules: %d@," d.rul ;
+  F.fprintf fmt "Non linear rules: %d@," d.nlr ;
+  F.fprintf fmt "HO rules: %d@," d.hor
 
 (** [csv_hdr f] outputs a csv header to formatter [f]. *)
 let csv_hdr : Format.formatter -> unit = fun fmt ->
   Format.fprintf fmt "%s" ""
 
-(** [pp f d] pretty prints data [d] to formatter [f]. *)
-let pp : Format.formatter -> t -> unit = assert false
-
 (** [pp_csv f d] outputs a line in csv format containing some of the
     information in a dataset. *)
-let pp_csv : Format.formatter -> t -> unit = assert false
+let pp_csv : Format.formatter -> t -> unit = fun fmt ->
+  let module F = Format in
+  csv_hdr fmt ;
+  assert false
