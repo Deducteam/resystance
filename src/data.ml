@@ -154,7 +154,14 @@ let of_file : string -> t = fun fname ->
   ; hgt = rules_heights sign }
 
 (** [merge d e] merges datasets [d] and [e] into one. *)
-let merge : t -> t -> t = assert false
+let merge : t -> t -> t = fun d e ->
+  { fname = None
+  ; sym = d.sym + e.sym
+  ; rul = d.rul + e.rul
+  ; nlr = d.nlr + e.nlr
+  ; hor = d.hor + e.hor
+  ; siz = D.merge d.siz e.siz
+  ; hgt = D.merge d.hgt e.hgt }
 
 (** [csv_hdr f] outputs a csv header to formatter [f]. *)
 let csv_hdr : Format.formatter -> unit = fun fmt ->
