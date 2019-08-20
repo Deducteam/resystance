@@ -5,8 +5,6 @@ in the [lambdapi](https://github.com/deducteam/lambdapi) format.
 ## Installation
 The tool can be compiled with dune with the dependencies
 - lambdapi (development version needed)
-- yojson
-- ppx\_deriving\_yojson
 - timed
 
 *Lambdapi must be compiled from sources.*  To have the latest version.
@@ -17,84 +15,45 @@ make install
 ```
 
 ## Output
-The program outputs json with this semantics:
-- the field `catalogue` contains values that are counted:
-  - `sym` number of symbols,
-  - `rul` number of rules,
-  - `nlr` number of non left linear rules,
-  - `hor` number of rules with abstractions;
-- `stats` contains statistics coming from distributions,
-  - `arul_size` distribution of the size of the rules
-  - `arul_height` distribution of the height of the rules.
+The program outputs the following statistics:
+- `Symbols` number of symbols,
+- `Rules` number of rules,
+- `NL_rules` number of non left linear rules,
+- `HO_rules` number of rules with abstractions;
+- statistics of three distributions:
+  + `Arity` arity of the root symbol of the rules
+  + `Size` number of subterms in rules
+  + `Height` height (or depth) of the rules
   
-The statistics are
-- `percentiles` all the percentiles of the distribution,
-- `average` the name says it all,
-- `sd` the standard deviation.
+The statistics of distributions are
+- `avg` average value
+- `25th_pct` 25th percentile
+- `med` median or 50th percentile
+- `75th_pct` 75th percentile
+- `sd` standard deviation.
 
-Data can be output as csv lines, where the fields are, from left to
-right
-- file name if used with `--separate`, or `N/A`,
-- number of symbols,
-- number of rules,
-- number of non left linear rules,
-- number of rules with abstractions.
+The CSV separator is the comma ','.  CSV content is preceded by a
+header containing the name of the columns.
 
 ## Options
-- `--csv` output as a csv line rather than a full json
+- `--csv` output as a csv line
 - `--separate` output one csv line per input file
 
 ## Example
-On the
-[dedukti library](https://github.com/rafoo/dklib/archive/v2.6.zip), 
+On the tests,
 ```
-$ shopt -s extglob
-$ cd dklib/
-$ resystance !(dk_monads_coc.dk)
-{
-  "catalogue": { "sym": 361, "rul": 258, "nlr": 1, "hor": 0 },
-  "stats": {
-    "arul_size": {
-      "percentiles": [
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5,
-        5, 5, 5, 6, 7, 7, 7, 8
-      ],
-      "average": 2.546511627906977,
-      "sd": 1.5018617134922705
-    },
-    "arul_height": {
-      "percentiles": [
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 6, 7, 7, 7, 8
-      ],
-      "average": 3.1705426356589146,
-      "sd": 1.4712965911178189
-    }
-  }
-}
-$ resystance !(dk_monads_coc.dk) --separate
-slist.dk, 23, 19, 0, 0
-dk_type.dk, 15, 6, 0, 0
-dk_tuple.dk, 5, 0, 0, 0
-dk_string.dk, 5, 4, 0, 0
-dk_opt.dk, 6, 2, 0, 0
-dk_nat.dk, 47, 39, 0, 0
-dk_monads.dk, 12, 12, 1, 0
-dk_machine_int.dk, 31, 50, 0, 0
-dk_logic.dk, 61, 21, 0, 0
-dk_list.dk, 13, 10, 0, 0
-dklib.dk, 0, 0, 0, 0
-dk_int.dk, 22, 21, 0, 0
-dk_fail.dk, 1, 0, 0, 0
-dk_char.dk, 70, 0, 0, 0
-dk_builtins.dk, 10, 0, 0, 0
-dk_bool.dk, 13, 9, 0, 0
-dk_binary_nat.dk, 23, 55, 0, 0
-cc.dk, 4, 10, 0, 0
+$ cd tests/
+$ resystance *
+SUMMARY
+Symbols         : 17
+Rules           : 25
+Non linear rules: 0
+HO rules        : 0
+$ resystance --csv *
+File,Symbols,Rules,NL_rules,HO_rulesArity_avg,Arity_25th_pct,Arity_med,Arity_75th_pctHeight_avg,Height_25th_pct,Height_med,Height_75th_pctSize_avg,Size_25th_pct,Size_med,Size_75th_pct
+N/A,17,25,0,0,1.920000,2,2,2,1.120000,1,1,2,1.360000,1,1,3
+$ resystance --separate *
+File,Symbols,Rules,NL_rules,HO_rulesArity_avg,Arity_25th_pct,Arity_med,Arity_75th_pctHeight_avg,Height_25th_pct,Height_med,Height_75th_pctSize_avg,Size_25th_pct,Size_med,Size_75th_pct
+nat.lp,9,15,0,0,2.000000,2,2,2,1.333333,1,1,1,1.733333,1,1,2
+bool.lp,8,10,0,0,1.800000,2,1,2,0.800000,1,0,1,0.800000,1,0,1
 ```
