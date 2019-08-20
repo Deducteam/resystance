@@ -3,6 +3,9 @@ open Extra
 
 module D = Distribution
 
+(** The CSV field separator. *)
+let csv_sep = ","
+
 (** A record containing all data from a file (or several files). *)
 type t =
   { fname : string option
@@ -183,13 +186,16 @@ let pp : Format.formatter -> t -> unit = fun fmt d ->
   F.fprintf fmt "HO rules        : %d" d.hor ;
   F.fprintf fmt "@]@."
 
-(** [csv_hdr f] outputs a csv header to formatter [f]. *)
-let csv_hdr : Format.formatter -> unit = fun fmt ->
-  Format.fprintf fmt "%s" ""
+let csv_hdr : string =
+  String.concat csv_sep
+    ["File"; "Symbols"; "Rules"; "NL_rules"; "HO_rules"]
 
 (** [pp_csv f d] outputs a line in csv format containing some of the
     information in a dataset. *)
-let pp_csv : Format.formatter -> t -> unit = fun fmt ->
+let pp_csv : Format.formatter -> t -> unit = fun fmt d ->
   let module F = Format in
-  csv_hdr fmt ;
-  assert false
+  let fname = match d.fname with Some(f) -> f | None -> "N/A" in
+  let pp_sep fmt () = F.pp_print_string fmt csv_sep in
+  F.fprintf fmt "%s%s%a" fname csv_sep
+    (F.pp_print_list ~pp_sep F.pp_print_int)
+    [d.sym; d.rul; d.nlr; d.hor]
