@@ -24,13 +24,14 @@ let _ =
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
   let stats = List.map Data.of_file (!files) in
-  let pp = if !csv || !separate then Data.pp_csv else Data.pp in
   let ppf = F.std_formatter in
-  if !separate then begin
-    Format.pp_print_string ppf Data.csv_hdr ;
-    Format.pp_print_newline ppf () ;
-    List.iter (F.fprintf ppf "%a\n" pp) stats
-    end
-  else
-    List.fold_right Data.merge stats Data.empty |>
-    F.fprintf ppf "%a\n" pp
+  let pp = if !csv || !separate
+           then begin
+               Format.pp_print_string ppf Data.csv_hdr ;
+               Format.pp_print_newline ppf () ;
+               Data.pp_csv end
+           else Data.pp
+  in
+  if !separate then List.iter (F.fprintf ppf "%a\n" pp) stats else
+  List.fold_right Data.merge stats Data.empty |>
+  F.fprintf ppf "%a\n" pp
