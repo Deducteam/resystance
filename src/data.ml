@@ -188,7 +188,24 @@ let pp : Format.formatter -> t -> unit = fun fmt d ->
 
 let csv_hdr : string =
   String.concat csv_sep
-    ["File"; "Symbols"; "Rules"; "NL_rules"; "HO_rules"]
+    ["File"; "Symbols"; "Rules"; "NL_rules"; "HO_rules"; "Size_avg";
+     "Height_avg"]
+
+(** [csv_hdr_distrib l] returns the csv header containing column
+ ** fields for distributions prefixed by a label. *)
+let csv_hdr_distrib : string -> string = fun label ->
+  List.map ((^) label) ["_avg"; "_25th_pct"; "_med"; "_75th_pct"] |>
+  String.concat csv_sep
+
+(** [pp_distr_csv fmt distr] pretty prints distribution [distr] to
+ ** formatter [fmt]. *)
+let pp_distr_csv : Format.formatter -> D.t -> unit = fun fmt d ->
+  let module F = Format in
+  let open D in
+  let pp_sep fmt () = F.pp_print_string fmt "," in
+  F.fprintf fmt "%f%a%a" (average d) pp_sep ()
+    (F.pp_print_list ~pp_sep F.pp_print_int)
+    [percentile 25 d; percentile 50 d; percentile 75 d]
 
 (** [pp_csv f d] outputs a line in csv format containing some of the
     information in a dataset. *)
