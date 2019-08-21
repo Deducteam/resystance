@@ -7,6 +7,9 @@ bin:
 install:
 	dune install
 
+doc:
+	dune build @doc
+
 uninstall:
 	dune uninstall
 
