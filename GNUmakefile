@@ -1,17 +1,17 @@
 DUNE ?= dune
 
-.PHONY: bin install uninstall clean
+.PHONY: bin install doc uninstall clean
 bin:
-	dune build
+	$(DUNE) build
 
 install:
-	dune install
+	$(DUNE) install
 
 doc:
-	dune build @doc
+	$(DUNE) build @doc
 
 uninstall:
-	dune uninstall
+	$(DUNE) uninstall
 
 clean:
 	-rm -r _build/
