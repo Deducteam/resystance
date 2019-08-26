@@ -7,9 +7,9 @@ type t =
   ; values : int list
   (** Values of the distribution. *) }
 
-(** [distribution d] is a smart constructor. *)
+(** [distribution d] sorts dataset [d]. *)
 let distribution : t -> t = fun d ->
-  { values = List.sort (+) d.values ; cardinal = d.cardinal }
+  { values = List.sort (-) d.values ; cardinal = d.cardinal }
 
 (** [of_list l] creates a distribution from a list. *)
 let of_list : int list -> t = fun l ->
