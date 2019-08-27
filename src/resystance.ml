@@ -23,6 +23,7 @@ let _ =
   let usage = Printf.sprintf "Usage: %s [OPTIONS] [FILES]" Sys.argv.(0) in
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
+  files := List.rev !files ;
   let stats = List.map Data.of_file (!files) in
   let ppf = F.std_formatter in
   let pp = if !csv || !separate
