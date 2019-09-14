@@ -124,7 +124,7 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
     | Meta(_, _)    -> 1
     | Kind          -> 0 (* Really? *)
     | _             -> assert false in
-  sot (Basics.add_args Kind lhs) - 1
+  sot (Basics.add_args Kind lhs) - (sot Kind)
 
 (** [rules_arity s] returns the distribution of the arity of the root symbol
     of the rules in signature [s]. *)
