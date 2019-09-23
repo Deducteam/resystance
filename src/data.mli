@@ -4,8 +4,8 @@ type t
 (** Empty dataset *)
 val empty : t
 
-(** [of_sig s] computes statistics from signature [s]. *)
-val of_sig : Core.Sign.t -> t
+(** [of_file f] computes statistics from file [f]. *)
+val of_file : string -> t
 
 (** [merge d e] merges datasets [d] and [e] into one. *)
 val merge : t -> t -> t

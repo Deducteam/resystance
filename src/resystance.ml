@@ -8,15 +8,6 @@ let csv : bool ref = ref false
 (** Whether to output the stats of each file as csv lines. *)
 let separate : bool ref = ref false
 
-(** [sig_of_file f] returns the signature of the file path [f]. *)
-let sig_of_file : string -> Sign.t = fun fname ->
-  let mp = Files.module_path fname in
-  let module C = Console in
-  begin try Compile.compile true mp
-    with C.Fatal(None, msg) -> C.exit_with "%s" msg
-       | C.Fatal(Some(p), msg) -> C.exit_with "[%a] %s" Pos.print p msg end;
-  Files.PathMap.find mp Sign.(Timed.(!loaded))
-
 let spec =
   let sp = Arg.align
       [ ( "--csv"
@@ -33,8 +24,7 @@ let _ =
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
   files := List.rev !files ;
-  let sigs = List.map sig_of_file !files in
-  let stats = List.map Data.of_sig sigs in
+  let stats = List.map Data.of_file (!files) in
   let ppf = F.std_formatter in
   let pp = if !csv || !separate
            then begin
@@ -45,11 +35,4 @@ let _ =
   in
   if !separate then List.iter (F.fprintf ppf "%a\n" pp) stats else
   List.fold_right Data.merge stats Data.empty |>
-  F.fprintf ppf "%a\n" pp ;
-  F.fprintf ppf "--- Critical pairs ---" ;
-  let cps = List.map Critical_pairs.critical_pairs sigs in
-  let pp_sig_cp fmt scps =
-    F.pp_print_list ~pp_sep:(F.pp_print_newline) Print.pp fmt scps
-  in
-  let pp_sep fmt () = F.fprintf fmt "\n%%%%\n" in
-  F.pp_print_list ~pp_sep pp_sig_cp ppf cps
+  F.fprintf ppf "%a\n" pp
