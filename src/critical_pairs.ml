@@ -2,10 +2,27 @@ open Core
 open Extra
 open Timed
 
-let solve = Unif.solve StrMap.empty false
+let _ =
+  Console.set_default_debug "res"
+
+(* It is possible to be more subtle than that, removing refs from
+   head symbols should be enough. *)
+(** [deep_untref t] removes all references from term [t]. *)
+let rec deep_untref : Terms.term -> Terms.term = fun t ->
+  match Basics.get_args t with
+  | TRef(t), args ->
+    begin match !t with
+    | None    -> assert false
+    | Some(t) -> Basics.add_args t (List.map deep_untref args)
+    end
+  | t      , args -> Basics.add_args t (List.map deep_untref args)
+
+let solve = Unif.solve StrMap.empty true
 
 (** [unifiable t u] returns whether [t] can be unified with [u]. *)
 let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
+  let t = deep_untref t in
+  let u = deep_untref u in
   let prob = { Unif.no_problems with Unif.to_solve = [(t, u)] } in
   solve prob <> None
 
@@ -14,18 +31,15 @@ let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
 let rec cps : Terms.term -> Terms.term -> Terms.term list =
   fun l lp ->
   let open Terms in
-  let unified = if unifiable l lp then [lp] else [] in
-  match lp with
-  | Appl(t, u) -> unified @ (cps l t) @ (cps l u)
-  | Abst(_, b) -> let _, te = Bindlib.unbind b in unified @ (cps l te)
-  | TRef(t)    ->
-    begin match !t with
-      | Some(t) -> unified @ (cps l t)
-      | None    -> unified end
-  | Symb(_, _)
-  | Vari(_)    -> unified
-  | Meta(_, _) -> unified
-  | _          -> unified
+  match Basics.get_args lp with
+  | Meta(_, _)   , _
+  | Patt(_, _, _), _ -> []
+  | Symb(_, _), args
+  | Abst(_, _), args
+  | Vari(_)   , args ->
+    let argunif = List.map (cps l) args |> List.flatten in
+    if unifiable l lp then lp :: argunif else argunif
+  | _         , _    -> assert false
 
 let critical_pairs : Sign.t -> Terms.term list = fun sign ->
   let open Terms in
