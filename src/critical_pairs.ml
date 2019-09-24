@@ -5,6 +5,8 @@ open Timed
 let _ =
   Console.set_default_debug "res"
 
+type critical_pair = Terms.term
+
 (* It is possible to be more subtle than that, removing refs from
    head symbols should be enough. *)
 (** [deep_untref t] removes all references from term [t]. *)
@@ -17,7 +19,7 @@ let rec deep_untref : Terms.term -> Terms.term = fun t ->
     end
   | t      , args -> Basics.add_args t (List.map deep_untref args)
 
-let solve = Unif.solve StrMap.empty true
+let solve = Unif.solve StrMap.empty false
 
 (** [unifiable t u] returns whether [t] can be unified with [u]. *)
 let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
@@ -25,7 +27,9 @@ let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
   let u = deep_untref u in
   Format.printf "Unifying %a =? %a\n" Print.pp_term t Print.pp_term u;
   let prob = { Unif.no_problems with Unif.to_solve = [(t, u)] } in
-  solve prob <> None
+  let r = solve prob <> None in
+  if r then Format.printf "Success\n" else Format.printf "Failed\n";
+  r
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
     subterms of lhs [lp]. *)
@@ -39,6 +43,7 @@ let rec cps : Terms.term -> Terms.term -> Terms.term list =
   | Abst(_, _), args
   | Vari(_)   , args ->
     let argunif = List.map (cps l) args |> List.flatten in
+    if l == lp then argunif else (* Don't compare same terms *)
     if unifiable l lp then lp :: argunif else argunif
   | _         , _    -> assert false
 
@@ -53,8 +58,7 @@ let critical_pairs : Sign.t -> Terms.term list = fun sign ->
   let lhs = StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs
             |> List.of_seq
   in
-  let noh t =
-    let _, args = Basics.get_args t in
-    List.flatten (List.map (cps t) args)
-  in
-  List.map noh lhs |> List.flatten
+  List.map
+    (fun l1 -> List.map (fun l2 -> cps l1 l2) lhs |> List.flatten)
+    lhs
+  |> List.flatten
