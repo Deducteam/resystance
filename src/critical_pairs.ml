@@ -23,6 +23,7 @@ let solve = Unif.solve StrMap.empty true
 let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
+  Format.printf "Unifying %a =? %a\n" Print.pp_term t Print.pp_term u;
   let prob = { Unif.no_problems with Unif.to_solve = [(t, u)] } in
   solve prob <> None
 
@@ -44,11 +45,14 @@ let rec cps : Terms.term -> Terms.term -> Terms.term list =
 let critical_pairs : Sign.t -> Terms.term list = fun sign ->
   let open Terms in
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
+  (* Build terms from lhs of rules of symbol [s]. *)
   let term_of_lhs s =
-    List.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
-      !(s.sym_rules)
+    List.to_seq !(s.sym_rules)
+    |> Seq.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
   in
-  let lhs = StrMap.fold (fun _ s acc -> (term_of_lhs s) @ acc) syms [] in
+  let lhs = StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs
+            |> List.of_seq
+  in
   let noh t =
     let _, args = Basics.get_args t in
     List.flatten (List.map (cps t) args)
