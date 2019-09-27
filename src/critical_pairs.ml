@@ -21,20 +21,20 @@ let rec deep_untref : term -> term = fun t ->
 let solve = Unif.solve StrMap.empty false
 
 (** [unifiable t u] returns whether [t] can be unified with [u]. *)
-let unifiable : term -> term -> bool = fun t u ->
+let unifiable : term -> term -> Unification.substitution option = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
   Format.printf "Unifying [%a =? %a]... " Print.pp_term t Print.pp_term u;
-  let r =
-    try ignore @@ Unification.unify t u; true with
-    | Unification.CantUnify -> false
+  let mgu =
+    try Some(Unification.unify t u) with
+    | Unification.CantUnify -> None
   in
-  Format.printf (if r then "success\n" else "failure\n");
-  r
+  Format.printf (match mgu with Some(_) -> "success\n" | None -> "failure\n");
+  mgu
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
     subterms of lhs [lp]. *)
-let rec cps : term -> term -> (term * term) list =
+let rec cps : term -> term -> (term * term * term) list =
   fun l lp ->
   let open Terms in
   match Basics.get_args lp with
@@ -45,10 +45,13 @@ let rec cps : term -> term -> (term * term) list =
   | Vari(_)   , args ->
     let argunif = List.map (cps l) args |> List.flatten in
     if l == lp then argunif else (* Don't compare same terms *)
-    if unifiable l lp then (l, lp) :: argunif else argunif
+    begin match unifiable l lp with
+      | Some(s) -> (l, lp, Unification.lift s l) :: argunif
+      | None    -> argunif
+    end
   | _         , _    -> assert false
 
-let critical_pairs : Sign.t -> (term * term) list = fun sign ->
+let critical_pairs : Sign.t -> (term * term * term) list = fun sign ->
   let open Terms in
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
   (* Build terms from lhs of rules of symbol [s]. *)

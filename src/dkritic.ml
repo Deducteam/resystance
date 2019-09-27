@@ -20,11 +20,12 @@ let _ =
   let sigs = List.map sig_of_file !files in
   let cps = List.map Critical_pairs.critical_pairs sigs in
   let ppf = F.std_formatter in
-  let pp_pair fmt tp = F.fprintf fmt "(%a, %a)"
-      Print.pp (fst tp) Print.pp (snd tp)
+  let pp_triple fmt (l1, l2, c) =
+    F.fprintf fmt "(%a, %a) => %a"
+      Print.pp (l1) Print.pp (l2) Print.pp c
   in
   let pp_sig_cp fmt scps =
-    F.pp_print_list ~pp_sep:(F.pp_print_newline) pp_pair fmt scps
+    F.pp_print_list ~pp_sep:(F.pp_print_newline) pp_triple fmt scps
   in
   let pp_sep fmt () = F.fprintf fmt "\n%%%%\n" in
   F.pp_print_list ~pp_sep pp_sig_cp ppf cps;

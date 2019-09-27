@@ -1,7 +1,7 @@
 (executable
  (name dkstats)
  (public_name dkstats)
- (modules ("dkstat" "data" "distribution"))
+ (modules ("dkstats" "data" "distribution"))
  (libraries lambdapi.core timed bindlib))
 
 (executable
