@@ -25,11 +25,9 @@ let solve = Unif.solve StrMap.empty false
 let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
-  Format.printf "Unifying %a =? %a\n" Print.pp_term t Print.pp_term u;
-  let prob = { Unif.no_problems with Unif.to_solve = [(t, u)] } in
-  let r = solve prob <> None in
-  if r then Format.printf "Success\n" else Format.printf "Failed\n";
-  r
+  Format.printf "Unifying %a =? %a\n%!" Print.pp_term t Print.pp_term u;
+  try ignore @@ Unification.unify t u; true with
+  | Unification.CantUnify -> false
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
     subterms of lhs [lp]. *)
