@@ -1,5 +1,5 @@
-# ReSyStanCe: Rewrite Systems Statistics 'n Counts
-ReSyStanCe is a tool to collect statistics on rewrite systems written
+# Resystance: Rewrite Systems Statistics
+Resystance is a tool to collect statistics on rewrite systems written
 in the [lambdapi](https://github.com/deducteam/lambdapi) format.
 
 ## Installation
@@ -14,7 +14,13 @@ and then
 make install
 ```
 
-## Output
+## Usage
+Two executables are available
+- `dkstats` to compute miscellaneous statistics,
+- `dkritic` to find critical pairs in the system.
+
+## Dkstats
+### Output description
 The program outputs the following statistics:
 - `Symbols` number of symbols,
 - `Rules` number of rules,
@@ -35,11 +41,11 @@ The statistics of distributions are
 The CSV separator is the comma ','.  CSV content is preceded by a
 header containing the name of the columns.
 
-## Options
+### Options
 - `--csv` output as a csv line
 - `--separate` output one csv line per input file
 
-## Example
+### Example
 On the tests,
 ```
 $ cd tests/
@@ -57,3 +63,5 @@ File,Symbols,Rules,NL_rules,HO_rulesArity_avg,Arity_25th_pct,Arity_med,Arity_75t
 nat.lp,9,15,0,0,2.000000,2,2,2,1.333333,1,1,1,1.733333,1,1,2
 bool.lp,8,10,0,0,1.800000,2,1,2,0.800000,1,0,1,0.800000,1,0,1
 ```
+
+## Dkritic [WIP]
