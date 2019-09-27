@@ -1,4 +1,11 @@
 (executable
  (name resystance)
  (public_name resystance)
+ (modules ("resystance" "data" "distribution"))
+ (libraries lambdapi.core timed bindlib))
+
+(executable
+ (name dkritic)
+ (public_name dkritic)
+ (modules ("dkritic" "critical_pairs" "unification"))
  (libraries lambdapi.core timed bindlib))

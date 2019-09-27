@@ -46,10 +46,3 @@ let _ =
   if !separate then List.iter (F.fprintf ppf "%a\n" pp) stats else
   List.fold_right Data.merge stats Data.empty |>
   F.fprintf ppf "%a\n" pp ;
-  F.fprintf ppf "--- Critical pairs ---\n" ;
-  let cps = List.map Critical_pairs.critical_pairs sigs in
-  let pp_sig_cp fmt scps =
-    F.pp_print_list ~pp_sep:(F.pp_print_newline) Print.pp fmt scps
-  in
-  let pp_sep fmt () = F.fprintf fmt "\n%%%%\n" in
-  F.pp_print_list ~pp_sep pp_sig_cp ppf cps
