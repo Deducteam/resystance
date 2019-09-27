@@ -1,5 +1,6 @@
 open Core
 module F = Format
+module U = Unification
 
 (** [sig_of_file f] returns the signature of the file path [f]. *)
 let sig_of_file : string -> Sign.t = fun fname ->
@@ -20,12 +21,12 @@ let _ =
   let sigs = List.map sig_of_file !files in
   let cps = List.map Critical_pairs.critical_pairs sigs in
   let ppf = F.std_formatter in
-  let pp_triple fmt (l1, l2, c) =
-    F.fprintf fmt "(%a, %a) => %a"
-      Print.pp (l1) Print.pp (l2) Print.pp c
+  let pp_triple_s fmt (l1, l2, c, s) =
+    F.fprintf fmt "(%a, %a) => %a {%a}"
+      Print.pp (l1) Print.pp (l2) Print.pp c U.pp_subst s
   in
   let pp_sig_cp fmt scps =
-    F.pp_print_list ~pp_sep:(F.pp_print_newline) pp_triple fmt scps
+    F.pp_print_list ~pp_sep:(F.pp_print_newline) pp_triple_s fmt scps
   in
   let pp_sep fmt () = F.fprintf fmt "\n%%%%\n" in
   F.pp_print_list ~pp_sep pp_sig_cp ppf cps;

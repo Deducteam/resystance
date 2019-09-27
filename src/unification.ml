@@ -5,6 +5,11 @@ type vname = string
 
 type substitution = (vname * term) list
 
+let pp_subst : Format.formatter -> substitution -> unit = fun fmt s ->
+  let pp_sep fmt () = Format.fprintf fmt ", " in
+  let pp_subst fmt (vn, t) = Format.fprintf fmt "%s := %a" vn Print.pp t in
+  Format.pp_print_list ~pp_sep pp_subst fmt s
+
 let indom : vname -> substitution -> bool = fun vn->
   List.exists (fun (y, _) -> y = vn)
 

@@ -3,6 +3,8 @@ open Extra
 open Timed
 open Terms
 
+module U = Unification
+
 let _ =
   Console.set_default_debug "res"
 
@@ -34,7 +36,7 @@ let unifiable : term -> term -> Unification.substitution option = fun t u ->
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
     subterms of lhs [lp]. *)
-let rec cps : term -> term -> (term * term * term) list =
+let rec cps : term -> term -> (term * term * term * U.substitution) list =
   fun l lp ->
   let open Terms in
   match Basics.get_args lp with
@@ -46,13 +48,13 @@ let rec cps : term -> term -> (term * term * term) list =
     let argunif = List.map (cps l) args |> List.flatten in
     if l == lp then argunif else (* Don't compare same terms *)
     begin match unifiable l lp with
-      | Some(s) -> (l, lp, Unification.lift s l) :: argunif
+      | Some(s) -> (l, lp, Unification.lift s l, s) :: argunif
       | None    -> argunif
     end
   | _         , _    -> assert false
 
-let critical_pairs : Sign.t -> (term * term * term) list = fun sign ->
-  let open Terms in
+let critical_pairs : Sign.t
+  -> (term * term * term * U.substitution) list = fun sign ->
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
   (* Build terms from lhs of rules of symbol [s]. *)
   let term_of_lhs s =
