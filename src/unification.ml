@@ -21,8 +21,9 @@ let rec app : substitution -> vname -> term = fun s x ->
 
 let rec lift : substitution -> term -> term = fun s t ->
   match Basics.get_args t with
-  | Patt(_, v, _) as h, ts ->
-    Basics.add_args (if indom v s then app s v else h) (List.map (lift s) ts)
+  | Patt(_, v, _), ts when indom v s ->
+    Basics.add_args (app s v) (List.map (lift s) ts)
+  | Patt(_) as h, ts -> Basics.add_args h (List.map (lift s) ts)
   | Symb(_) as u , ts -> Basics.add_args u (List.map (lift s) ts)
   | _ -> assert false
 
