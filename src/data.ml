@@ -35,8 +35,6 @@ let empty : t =
   ; siz = D.empty
   ; hgt = D.empty }
 
-let compile = Compile.compile true
-
 (** [count_symbols s] counts the number of symbols declared in the
     signature [s]. *)
 let count_symbols : Sign.t -> int = fun sign ->
@@ -145,14 +143,10 @@ let rules_sizes : Sign.t -> D.t = fun sign ->
     StrMap.fold (fun _ (sy, _) acc -> sizes_of_sym sy @ acc)
   Timed.(!(sign.sign_symbols)) []
 
-(** [of_file f] computes statistics on rules of file [f]. *)
-let of_file : string -> t = fun fname ->
-  let mp = Files.module_path fname in
-  begin let module C = Console in
-    try compile mp
-    with C.Fatal(None,    msg) -> C.exit_with "%s" msg
-       | C.Fatal(Some(p), msg) -> C.exit_with "[%a] %s" Pos.print p msg end ;
-  let sign = Files.PathMap.find mp Sign.(Timed.(!loaded)) in
+(** [of_sig s] computes statistics on rules of signature [s]. *)
+let of_sig : Sign.t -> t = fun sign ->
+  let spp_path () mp = String.concat "." mp in
+  let fname = Format.sprintf "%a" spp_path sign.Sign.sign_path in
   { fname = Some(fname)
   ; sym = count_symbols sign
   ; rul = count_rules sign
