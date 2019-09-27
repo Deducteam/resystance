@@ -38,8 +38,7 @@ let unifiable : term -> term -> Unification.substitution option = fun t u ->
     subterms of lhs [lp]. *)
 let rec cps : term -> term -> (term * term * term * U.substitution) list =
   fun l lp ->
-  let open Terms in
-  match Basics.get_args lp with
+  match Basics.get_args (U.rename lp) with
   | Meta(_, _)   , _
   | Patt(_, _, _), _ -> []
   | Symb(_, _), args
