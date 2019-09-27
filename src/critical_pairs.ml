@@ -5,9 +5,6 @@ open Terms
 
 module U = Unification
 
-let _ =
-  Console.set_default_debug "res"
-
 (* It is possible to be more subtle than that, removing refs from
    head symbols should be enough. *)
 (** [deep_untref t] removes all references from term [t]. *)
@@ -23,7 +20,7 @@ let rec deep_untref : term -> term = fun t ->
 let solve = Unif.solve StrMap.empty false
 
 (** [unifiable t u] returns whether [t] can be unified with [u]. *)
-let unifiable : term -> term -> Unification.substitution option = fun t u ->
+let unifiable : term -> term -> U.substitution option = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
   Format.printf "Unifying [%a =? %a]... " Print.pp_term t Print.pp_term u;
@@ -47,23 +44,21 @@ let rec cps : term -> term -> (term * term * term * U.substitution) list =
     let argunif = List.map (cps l) args |> List.flatten in
     if l == lp then argunif else (* Don't compare same terms *)
     begin match unifiable l lp with
-      | Some(s) -> (l, lp, Unification.lift s l, s) :: argunif
+      | Some(s) -> (l, lp, U.lift s l, s) :: argunif
       | None    -> argunif
     end
   | _         , _    -> assert false
 
-let critical_pairs : Sign.t
-  -> (term * term * term * U.substitution) list = fun sign ->
+let critical_pairs : Sign.t -> (term * term * term * U.substitution) list =
+  fun sign ->
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
   (* Build terms from lhs of rules of symbol [s]. *)
   let term_of_lhs s =
     List.to_seq !(s.sym_rules)
     |> Seq.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
   in
-  let lhs = StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs
-            |> List.of_seq
+  let lhs =
+    StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs |> List.of_seq
   in
-  List.map
-    (fun l1 -> List.map (fun l2 -> cps l1 l2) lhs |> List.flatten)
-    lhs
-  |> List.flatten
+  let f l1 = List.map (fun l2 -> cps l1 l2) lhs |> List.flatten in
+  List.map f lhs |> List.flatten

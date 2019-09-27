@@ -69,8 +69,7 @@ let rec solve : (term * term) list -> substitution -> substitution =
     | (Symb(q,_)   ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
     | (Symb(_)     ,ts), (Symb(_)  ,us)             ->
       solve (List.combine ts us @ tl) s
-    | (Symb(_) as q,ts), (_        , _)             ->
-      solve ((u, Basics.add_args q ts) :: tl) s
+    | (Symb(_)     ,_) , (_        , _)             -> solve ((u, t) :: tl) s
     | (Patt(_) as v,_) , (t        , _) when v = t  -> solve tl s
     | (Patt(_,x,_) ,_) , (_        , _)             -> elim x u tl s
     | _                                             -> assert false
