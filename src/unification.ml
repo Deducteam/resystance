@@ -17,7 +17,8 @@ let rec app : substitution -> vname -> term = fun s x ->
 let rec lift : substitution -> term -> term = fun s t ->
   let h, args = Basics.get_args t in
   match h, args with
-  | Patt(_, v, _), _  -> app s v
+  | Patt(_, v, _), ts ->
+    Basics.add_args (if indom v s then app s v else h) (List.map (lift s) ts)
   | Symb(_) as u , ts -> Basics.add_args u (List.map (lift s) ts)
   | _ -> assert false
 
@@ -37,9 +38,12 @@ let rec solve : (term * term) list -> substitution -> substitution =
     | (Symb(q,_)   ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
     | (Symb(_)     ,ts), (Symb(_)  ,us)             ->
       solve (List.combine ts us @ tl) s
+    | (Symb(_) as q,ts), (p        , us)            ->
+      solve ((Basics.add_args p us, Basics.add_args q ts) :: tl) s
     | (Patt(_) as v,_) , (t        , _) when v = t  -> solve tl s
     | (Patt(_,x,_) ,_) , (t        , _)             -> elim x t tl s
-    | _ -> assert false end
+    | _ -> assert false
+    end
   | [] -> s
 
 and elim : vname -> term -> (term * term) list -> substitution -> substitution =

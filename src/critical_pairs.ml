@@ -1,16 +1,15 @@
 open Core
 open Extra
 open Timed
+open Terms
 
 let _ =
   Console.set_default_debug "res"
 
-type critical_pair = Terms.term
-
 (* It is possible to be more subtle than that, removing refs from
    head symbols should be enough. *)
 (** [deep_untref t] removes all references from term [t]. *)
-let rec deep_untref : Terms.term -> Terms.term = fun t ->
+let rec deep_untref : term -> term = fun t ->
   match Basics.get_args t with
   | TRef(t), args ->
     begin match !t with
@@ -22,16 +21,20 @@ let rec deep_untref : Terms.term -> Terms.term = fun t ->
 let solve = Unif.solve StrMap.empty false
 
 (** [unifiable t u] returns whether [t] can be unified with [u]. *)
-let unifiable : Terms.term -> Terms.term -> bool = fun t u ->
+let unifiable : term -> term -> bool = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
-  Format.printf "Unifying %a =? %a\n%!" Print.pp_term t Print.pp_term u;
-  try ignore @@ Unification.unify t u; true with
-  | Unification.CantUnify -> false
+  Format.printf "Unifying [%a =? %a]... " Print.pp_term t Print.pp_term u;
+  let r =
+    try ignore @@ Unification.unify t u; true with
+    | Unification.CantUnify -> false
+  in
+  Format.printf (if r then "success\n" else "failure\n");
+  r
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
     subterms of lhs [lp]. *)
-let rec cps : Terms.term -> Terms.term -> Terms.term list =
+let rec cps : term -> term -> (term * term) list =
   fun l lp ->
   let open Terms in
   match Basics.get_args lp with
@@ -42,10 +45,10 @@ let rec cps : Terms.term -> Terms.term -> Terms.term list =
   | Vari(_)   , args ->
     let argunif = List.map (cps l) args |> List.flatten in
     if l == lp then argunif else (* Don't compare same terms *)
-    if unifiable l lp then lp :: argunif else argunif
+    if unifiable l lp then (l, lp) :: argunif else argunif
   | _         , _    -> assert false
 
-let critical_pairs : Sign.t -> Terms.term list = fun sign ->
+let critical_pairs : Sign.t -> (term * term) list = fun sign ->
   let open Terms in
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
   (* Build terms from lhs of rules of symbol [s]. *)
