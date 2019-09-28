@@ -55,12 +55,8 @@ let indom : vname -> substitution -> bool = fun vn->
 
 (** [app s v] applies substitution [s] to variable [v].
 
-    @raise Invalid_argument if [v] is not bound by [s]. *)
-let rec app : substitution -> vname -> term = fun s x ->
-  match s with
-  | (v, t) :: _ when v = x -> t
-  | _ :: tl                -> app tl x
-  | []                     -> invalid_arg "app"
+    @raise Not_found if [v] is not bound by [s]. *)
+let app : substitution -> vname -> term = fun s x -> List.assoc x s
 
 (** [lift s t] applies substitution [s] to term [t]. *)
 let rec lift : substitution -> term -> term = fun s t ->
