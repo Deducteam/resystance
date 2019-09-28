@@ -19,7 +19,7 @@ let rec deep_untref : term -> term = fun t ->
 
 let solve = Unif.solve StrMap.empty false
 
-(** [unifiable t u] returns whether [t] can be unified with [u]. *)
+(** [unifiable t u] returns a unifier of [t =? u] or [None]. *)
 let unifiable : term -> term -> U.substitution option = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
@@ -32,7 +32,12 @@ let unifiable : term -> term -> U.substitution option = fun t u ->
   mgu
 
 (** [cps l lp] searches for critical peaks involving lhs [l] and
-    subterms of lhs [lp]. *)
+    subterms of lhs [lp]. The returned quadruplet [(l, lp, lf, s)]
+    contains
+    - [l] (same as argument);
+    - [lp] (same as argument);
+    - [lf] [l] with the unifier [s] applied;
+    - [s] the unifier. *)
 let rec cps : term -> term -> (term * term * term * U.substitution) list =
   fun l lp ->
   match Basics.get_args (U.rename lp) with
@@ -49,6 +54,8 @@ let rec cps : term -> term -> (term * term * term * U.substitution) list =
     end
   | _         , _    -> assert false
 
+(** [critical_pairs s] returns a list of critical pairs emerging from
+    rewrite rules of signature [s]. *)
 let critical_pairs : Sign.t -> (term * term * term * U.substitution) list =
   fun sign ->
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
