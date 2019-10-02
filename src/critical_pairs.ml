@@ -70,6 +70,10 @@ let rec subterms_of : term -> term list = fun t ->
   | Vari(_)   , args -> t :: (List.map subterms_of args |> List.concat)
   | _ -> assert false
 
+let rec sizeof : term -> int = fun t ->
+  let _, tl = Basics.get_args t in
+  List.fold_right (fun e acc -> sizeof e + acc) tl 1
+
 (** [cps l1 l2] searches for critical peaks involving lhs [l1] and
     subterms of lhs [l2].  A returned quadruplet [(l1r, l2r, ls, s)]
     contains
@@ -83,10 +87,12 @@ let cps : (term * rhs) -> (term * rhs)
   let _, _ = r1, r2 in
   let l1 = U.rename l1 in
   let l2 = U.rename l2 in
-  let substs =
-    subterms_of l2 |> List.filter_map (unifiable l1)
-  in
-  List.map (fun s -> (l1, l2, U.lift s l2, s)) substs
+  let l1size = sizeof l1 in
+  subterms_of l2
+  (* sizeof t = sizeof l1 <=> t = l1 (because t is a subterm of l1) *)
+  |> List.filter (fun t -> l1size <> (sizeof t))
+  |> List.filter_map (unifiable l1)
+  |> List.map (fun s -> (l1, l2, U.lift s l2, s))
 
 
 (** [cps s] returns a list of critical pairs emerging from rewrite rules of
