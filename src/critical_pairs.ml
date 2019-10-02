@@ -59,6 +59,8 @@ let build_r_subst : term -> U.substitution -> int -> term_env array =
   List.iter f assoc;
   ar
 
+(** [subterms_of t] returns the subterms of term [t] which are not rewriting
+    variables. *)
 let rec subterms_of : term -> term list = fun t ->
   match Basics.get_args t with
   | Meta(_, _)   , _ -> []
@@ -68,12 +70,12 @@ let rec subterms_of : term -> term list = fun t ->
   | Vari(_)   , args -> t :: (List.map subterms_of args |> List.concat)
   | _ -> assert false
 
-(** [cps l lp] searches for critical peaks involving lhs [l] and
-    subterms of lhs [lp]. The returned quadruplet [(l, lp, lf, s)]
+(** [cps l1 l2] searches for critical peaks involving lhs [l1] and
+    subterms of lhs [l2].  A returned quadruplet [(l1r, l2r, ls, s)]
     contains
-    - [l] (same as argument);
-    - [lp] (same as argument);
-    - [lf] [l] with the unifier [s] applied;
+    - [l1r] [l1] renamed;
+    - [l2r] [l2] renamed;
+    - [ls] [l2] renamed with the unifier [s] applied;
     - [s] the unifier. *)
 let cps : (term * rhs) -> (term * rhs)
   -> (term * term * term * U.substitution) list =
