@@ -89,9 +89,9 @@ let cps : (term * rhs) -> (term * rhs)
   List.map (fun s -> (l1, l2, U.lift s l2, s)) substs
 
 
-(** [critical_pairs s] returns a list of critical pairs emerging from
-    rewrite rules of signature [s]. *)
-let critical_pairs : Sign.t -> (term * term * term * U.substitution) list =
+(** [cps s] returns a list of critical pairs emerging from rewrite rules of
+    signature [s]. *)
+let cps : Sign.t -> (term * term * term * U.substitution) list =
   fun sign ->
   let syms = !(sign.sign_symbols) |> StrMap.map fst in
   (* Build terms from lhs of rules of symbol [s]. *)
