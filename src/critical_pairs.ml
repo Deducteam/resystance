@@ -38,27 +38,6 @@ let unifiable : term -> term -> U.substitution option = fun t u ->
   Format.printf (match mgu with Some(_) -> "success\n" | None -> "failure\n");
   mgu
 
-(** [build_r_subst t s] builds an array to perform bindlib
-    substitution into Dedukti3 style rhs. *)
-let build_r_subst : term -> U.substitution -> int -> term_env array =
-  fun t s size ->
-  let rec loop t =
-    match Basics.get_args t with
-    | Patt(Some(i), v, _), args ->
-      let rest = List.map loop args |> List.concat in
-      Format.printf "%s/{%a}\n" v U.pp_subst s;
-      if U.indom v s then (i, U.app s v) :: rest else rest
-    | _, args -> List.map loop args |> List.concat
-  in
-  let assoc = loop t in
-  let ar = Array.make size TE_None in
-  let f (i, t) =
-    let b = Bindlib.raw_mbinder [||] [||] 0 mkfree (fun _ -> unfold t) in
-    ar.(i) <- TE_Some(b)
-  in
-  List.iter f assoc;
-  ar
-
 (** [subterms_of t] returns the subterms of term [t] which are not rewriting
     variables. *)
 let rec subterms_of : term -> term list = fun t ->
@@ -70,21 +49,20 @@ let rec subterms_of : term -> term list = fun t ->
   | Vari(_)   , args -> t :: (List.map subterms_of args |> List.concat)
   | _ -> assert false
 
+(** [sizeof t] computes the size of term [t] (number of symbols). *)
 let rec sizeof : term -> int = fun t ->
   let _, tl = Basics.get_args t in
   List.fold_right (fun e acc -> sizeof e + acc) tl 1
 
 (** [cps l1 l2] searches for critical peaks involving lhs [l1] and
-    subterms of lhs [l2].  A returned quadruplet [(l1r, l2r, ls, s)]
+    subterms of lhs [l2].  A returned quadruple [(l1r, l2r, ls, s)]
     contains
     - [l1r] [l1] renamed;
     - [l2r] [l2] renamed;
     - [ls] [l2] renamed with the unifier [s] applied;
     - [s] the unifier. *)
-let cps : (term * rhs) -> (term * rhs)
-  -> (term * term * term * U.substitution) list =
-  fun (l1, r1) (l2, r2) ->
-  let _, _ = r1, r2 in
+let cps : term -> term -> (term * term * term * U.substitution) list =
+  fun l1 l2 ->
   let l1 = U.rename l1 in
   let l2 = U.rename l2 in
   let l1size = sizeof l1 in
@@ -103,13 +81,13 @@ let cps : Sign.t -> (term * term * term * U.substitution) list =
   (* Build terms from lhs of rules of symbol [s]. *)
   let term_of_lhs s =
     List.to_seq !(s.sym_rules)
-    |> Seq.map (fun l -> (Basics.add_args (Symb(s, Nothing)) l.lhs, l.rhs))
+    |> Seq.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
   in
   let lhs =
     StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs |> List.of_seq
   in
-  let f (l1, r1) =
-    List.map (fun (l2, r2) -> cps (l1, r1) (l2, r2)) lhs
+  let f l1 =
+    List.map (fun l2 -> cps l1 l2) lhs
     |> List.flatten
   in
   List.map f lhs |> List.flatten
