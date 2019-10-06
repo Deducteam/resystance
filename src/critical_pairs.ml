@@ -58,19 +58,13 @@ let cps : term -> term -> (term * term * term * U.substitution) list =
   |> List.filter_map (unify l1)
   |> List.map (fun s -> (l1, l2, U.lift s l2, s))
 
-
-(** [cps s] returns a list of critical pairs emerging from rewrite rules of
-    signature [s]. *)
-let cps : Sign.t -> (term * term * term * U.substitution) list =
-  fun sign ->
-  let syms = !(sign.sign_symbols) |> StrMap.map fst in
-  (* Build terms from lhs of rules of symbol [s]. *)
+let cps : sym list -> (term * term * term * U.substitution) list = fun syms ->
   let term_of_lhs s =
     List.to_seq !(s.sym_rules)
     |> Seq.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
   in
   let lhs =
-    StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs |> List.of_seq
+    List.to_seq syms |> Seq.flat_map term_of_lhs |> List.of_seq
   in
   let f l1 =
     List.map (fun l2 -> cps l1 l2) lhs |> List.flatten

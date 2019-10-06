@@ -1,4 +1,5 @@
 open Core
+open Extra
 module F = Format
 module U = Unification
 
@@ -11,6 +12,10 @@ let sig_of_file : string -> Sign.t = fun fname ->
        | C.Fatal(Some(p), msg) -> C.exit_with "[%a] %s" Pos.print p msg end;
   Files.PathMap.find mp Sign.(Timed.(!loaded))
 
+(** [syms_of_sig s] returns the list of symbols of signature [s]. *)
+let syms_of_sig : Sign.t -> Terms.sym list = fun sign ->
+  Timed.(!(sign.sign_symbols)) |> StrMap.to_seq |> Seq.map snd |> Seq.map fst |> List.of_seq
+
 let spec =
   Arg.align []
 let _ =
@@ -18,8 +23,6 @@ let _ =
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage;
   files := List.rev !files;
-  let sigs = List.map sig_of_file !files in
-  let cps = List.map Critical_pairs.cps sigs in
   let ppf = F.std_formatter in
   let pp_quadruple_s fmt (l1, l2, lr, s) =
     F.fprintf fmt "[%a] =? [%a] -> [%a] {%a}"
@@ -29,5 +32,7 @@ let _ =
     F.pp_print_list ~pp_sep:(F.pp_print_newline) pp_quadruple_s fmt scps
   in
   let pp_sep fmt () = F.fprintf fmt "\n%%%%\n" in
+  let cps_of_file s = s |> sig_of_file |> syms_of_sig |> Critical_pairs.cps in
+  let cps = List.map cps_of_file !files in
   F.pp_print_list ~pp_sep pp_sig_cp ppf cps;
   Format.fprintf ppf "\n"
