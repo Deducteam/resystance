@@ -5,8 +5,6 @@ open Terms
 
 module U = Unification
 
-type rhs = (term_env, term) Bindlib.mbinder
-
 (* It is possible to be more subtle than that, removing refs from
    head symbols should be enough. *)
 (** [deep_untref t] removes all references from term [t]. *)
@@ -19,24 +17,12 @@ let rec deep_untref : term -> term = fun t ->
     end
   | t      , args -> Basics.add_args t (List.map deep_untref args)
 
-let rec deep_untenv : term -> term = function
-  | Appl(t, u) -> Appl(deep_untenv t, deep_untenv u)
-  | TEnv(TE_Some(b), ar) -> deep_untenv (Bindlib.msubst b ar)
-  | t -> t
-
-let solve = Unif.solve StrMap.empty false
-
-(** [unifiable t u] returns a unifier of [t =? u] or [None]. *)
-let unifiable : term -> term -> U.substitution option = fun t u ->
+(** [unify t u] returns a unifier of [t =? u] or [None]. *)
+let unify : term -> term -> U.substitution option = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
-  Format.printf "Unifying [%a =? %a]... " Print.pp_term t Print.pp_term u;
-  let mgu =
-    try Some(Unification.unify t u) with
-    | Unification.CantUnify -> None
-  in
-  Format.printf (match mgu with Some(_) -> "success\n" | None -> "failure\n");
-  mgu
+  try Some(Unification.unify t u)
+  with Unification.CantUnify -> None
 
 (** [subterms_of t] returns the subterms of term [t] which are not rewriting
     variables. *)
@@ -69,7 +55,7 @@ let cps : term -> term -> (term * term * term * U.substitution) list =
   subterms_of l2
   (* sizeof t = sizeof l1 <=> t = l1 (because t is a subterm of l1) *)
   |> List.filter (fun t -> l1size <> (sizeof t))
-  |> List.filter_map (unifiable l1)
+  |> List.filter_map (unify l1)
   |> List.map (fun s -> (l1, l2, U.lift s l2, s))
 
 
@@ -87,7 +73,6 @@ let cps : Sign.t -> (term * term * term * U.substitution) list =
     StrMap.to_seq syms |> Seq.map snd |> Seq.flat_map term_of_lhs |> List.of_seq
   in
   let f l1 =
-    List.map (fun l2 -> cps l1 l2) lhs
-    |> List.flatten
+    List.map (fun l2 -> cps l1 l2) lhs |> List.flatten
   in
   List.map f lhs |> List.flatten
