@@ -65,3 +65,11 @@ bool.lp,8,10,0,0,1.800000,2,1,2,0.800000,1,0,1,0.800000,1,0,1
 ```
 
 ## Dkritic [WIP]
+To see what it is about: `make test`
+
+- [x] Finding critical pairs in first order
+- [ ] Assess joinability of critical pairs in first order
+  + [ ] Implement path to a subterm
+  + [ ] Right hand side substitution
+- [ ] Find critical pairs higher order
+- [ ] Higher order joinability
