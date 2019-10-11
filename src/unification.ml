@@ -97,6 +97,7 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
       let ctx = HoVarSet.add x ctx in
       solve ((u, t) :: tl) s ctx
     | (Patt(_,x,ar)  ,_) , (t        , _)             ->
+      (* FIXME using a set might be a bad idea (losing order of vars). *)
       let allowed = Array.to_seq ar |> Seq.map Basics.to_tvar |>
                     HoVarSet.of_seq
       in
