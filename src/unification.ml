@@ -7,6 +7,10 @@ open Terms
 type vname = string
 
 module VnMap = Map.Make(struct type t = vname let compare = String.compare end)
+module HoVarSet = Set.Make(struct
+    type t = term Bindlib.var
+    let compare = Bindlib.compare_vars
+  end)
 
 type substitution = (vname * term) list
 
@@ -71,33 +75,50 @@ let rec occurs : vname -> term -> bool = fun v t ->
 
 exception CantUnify
 
-(** [solve eqs s] returns the substitution [s] with the additional bindings to
-    unify equations in [eqs].  An element [(t, u)] of [eqs] is a unification
-    [t =? u].
+(** [solve eqs s ctx] returns the substitution [s] with the additional bindings
+    to unify equations in [eqs] in context [ctx]. An element [(t, u)] of [eqs]
+    is a unification [t =? u].
 
     @raise CantUnify if unification is impossible. *)
-let rec solve : (term * term) list -> substitution -> substitution =
-  fun eqs s ->
+let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution =
+  fun eqs s ctx ->
   match eqs with
   | (t, u) :: tl ->
     begin match (Basics.get_args t, Basics.get_args u) with
-    | (Symb(q,_)   ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
-    | (Symb(_)     ,ts), (Symb(_)  ,us)             ->
-      solve (List.combine ts us @ tl) s
-    | (Symb(_)     ,_) , (_        , _)             -> solve ((u, t) :: tl) s
-    | (Patt(_) as v,_) , (t        , _) when v = t  -> solve tl s
-    | (Patt(_,x,_) ,_) , (_        , _)             -> elim x u tl s
+    | (Symb(q,_)     ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
+    | (Symb(_)       ,ts), (Symb(_)  ,us)             ->
+      solve (List.combine ts us @ tl) s ctx
+    | (Symb(_)       ,_) , (_        , _)             ->
+      solve ((u, t) :: tl) s ctx
+    | (Patt(_) as v  ,_) , (t        , _) when v = t  -> solve tl s ctx
+    | (Patt(_,x,[||]),_) , (_        , _)             -> elim x u tl s ctx
+    | (Abst(_,t)     ,_) , (Abst(_,u), _)             ->
+      let x, t, u = Bindlib.unbind2 t u in
+      let ctx = HoVarSet.add x ctx in
+      solve ((u, t) :: tl) s ctx
+    | (Patt(_,x,ar)  ,_) , (t        , _)             ->
+      let allowed = Array.to_seq ar |> Seq.map Basics.to_tvar |>
+                    HoVarSet.of_seq
+      in
+      let t = Terms.lift t in
+      let cond v = HoVarSet.mem v allowed || not @@ Bindlib.occur v t in
+      if HoVarSet.for_all cond ctx then elim x u tl s ctx else raise CantUnify
+    | (Abst(_)       ,_) , (Symb(_)  , _)             -> raise CantUnify
+    | (Abst(_)       ,_) , (_        , _)             ->
+      solve ((u, t) :: tl) s ctx
     | _                                             -> assert false
     end
   | [] -> s
 
 (** [elim v t eqs s] eliminates variable [v] replacing it by [t] in
     equations [eqs] and in substitution [s]. *)
-and elim : vname -> term -> (term * term) list -> substitution -> substitution =
-  fun x t eqs s ->
+and elim : vname -> term -> (term * term) list -> substitution -> HoVarSet.t
+  -> substitution =
+  fun x t eqs s ctx ->
   if occurs x t then raise CantUnify else
   let xt = lift [(x, t)] in
   solve (List.map (fun (u, u') -> (xt u, xt u')) eqs)
-    ((x, t) :: (List.map (fun (v, u) -> (v, xt u)) s))
+    ((x, t) :: (List.map (fun (v, u) -> (v, xt u)) s)) ctx
 
-let unify : term -> term -> substitution = fun t u -> solve [(t, u)] []
+let unify : term -> term -> substitution = fun t u ->
+  solve [(t, u)] [] HoVarSet.empty
