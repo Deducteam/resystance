@@ -2,8 +2,8 @@
 
 set debug +ers
 
-symbol const A : TYPE
-symbol const e : A
+constant symbol A : TYPE
+constant symbol e : A
 
 symbol i : A ⇒ A
 
