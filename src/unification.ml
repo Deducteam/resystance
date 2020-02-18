@@ -63,7 +63,14 @@ let rec lift : substitution -> term -> term = fun s t ->
   | Patt(_, v, _), ts when indom v s ->
     Basics.add_args (app s v) (List.map (lift s) ts)
   | Patt(_) as h, ts -> Basics.add_args h (List.map (lift s) ts)
-  | Symb(_) as u , ts -> Basics.add_args u (List.map (lift s) ts)
+  | Symb(_) as u, ts -> Basics.add_args u (List.map (lift s) ts)
+  | Abst(a, t)  , ts ->
+    (* Substitute into the body *)
+    let x, t = Bindlib.unbind t in
+    let t = lift s t in
+    (* and build back the abstraction *)
+    let t = Bindlib.unbox (Bindlib.bind_var x (Terms.lift t)) in
+    Basics.add_args (Abst(a, t)) (List.map (lift s) ts)
   | _ -> assert false
 
 (** [occurs v t] is true iff variable [v] appears in term [t]. *)
@@ -85,13 +92,24 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
   match eqs with
   | (t, u) :: tl ->
     begin match (Basics.get_args t, Basics.get_args u) with
+    (*  q =? r
+     * -------- q <> r
+     *   fail          *)
     | (Symb(q,_)     ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
+    (*        t1 =? u1 ... tn =? un
+     * ----------------------------------
+     *  q(t1, ..., tn) =? q(u1, ..., un)  *)
     | (Symb(_)       ,ts), (Symb(_)  ,us)             ->
       solve (List.combine ts us @ tl) s ctx
     | (Symb(_)       ,_) , (_        , _)             ->
       solve ((u, t) :: tl) s ctx
+    (* -----------
+     *   &x =? v   *)
     | (Patt(_) as v  ,_) , (t        , _) when v = t  -> solve tl s ctx
     | (Patt(_,x,[||]),_) , (_        , _)             -> elim x u tl s ctx
+    (*  t[z/x] =? u[z/y]
+     * ------------------
+     *  λ x, t =? λ y, u  *)
     | (Abst(_,t)     ,_) , (Abst(_,u), _)             ->
       let x, t, u = Bindlib.unbind2 t u in
       let ctx = HoVarSet.add x ctx in
@@ -107,7 +125,7 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
     | (Abst(_)       ,_) , (Symb(_)  , _)             -> raise CantUnify
     | (Abst(_)       ,_) , (_        , _)             ->
       solve ((u, t) :: tl) s ctx
-    | _                                             -> assert false
+    | _                                               -> assert false
     end
   | [] -> s
 
