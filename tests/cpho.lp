@@ -1,4 +1,4 @@
-symbol const T : TYPE
+constant symbol T : TYPE
 
 symbol f : (T ⇒ T) ⇒ T
 symbol u : T
