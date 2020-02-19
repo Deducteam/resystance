@@ -1,6 +1,9 @@
 open Core
 open Terms
 
+let log_unif = Console.new_logger 'v' "suni" "syntactic unification"
+let log_unif = log_unif.logger
+
 (** Name of rewriting variables.  We distinguish (bound) variables due
     to higher order and rewrite variables.  In [\x.f(X, x)], [X] is a
     rewrite variable and [x] is a bound variable (bound by [\x]). *)
@@ -80,6 +83,7 @@ let rec solve : (term * term) list -> substitution -> substitution =
   fun eqs s ->
   match eqs with
   | (t, u) :: tl ->
+    log_unif "solve [%a =? %a]" Print.pp t Print.pp u;
     begin match (Basics.get_args t, Basics.get_args u) with
     | (Symb(q,_)   ,_ ), (Symb(r,_), _) when q != r -> raise CantUnify
     | (Symb(_)     ,ts), (Symb(_)  ,us)             ->
