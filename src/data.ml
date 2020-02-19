@@ -48,10 +48,9 @@ let count_rules : Sign.t -> int = fun sign ->
 
 (** [nonlin r] returns true if rule [r] is left nonlinear. *)
 let nonlin : Terms.rule -> bool = fun { lhs ; _ } ->
-  let slots = List.to_seq lhs |>
-                Seq.filter_map
-                  (function Terms.Patt(io, _, _) -> io | _ -> None) |>
-                List.of_seq in
+  let slots =
+    List.filter_map (function Terms.Patt(io, _, _) -> io | _ -> None) lhs
+  in
   let slots_uniq = List.sort_uniq Int.compare slots in
   List.compare_lengths slots slots_uniq <> 0
 

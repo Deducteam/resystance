@@ -71,14 +71,10 @@ let cps : term -> term -> (term * term * term * U.substitution) list =
   |> List.map (fun s -> (l1, l2, U.lift s l2, s))
 
 let cps : sym list -> (term * term * term * U.substitution) list = fun syms ->
-  let term_of_lhs s =
-    List.to_seq !(s.sym_rules)
-    |> Seq.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs)
+  let lhs_of_symb ({sym_rules; _ } as s) =
+    List.map (fun l -> Basics.add_args (Symb(s, Nothing)) l.lhs) !sym_rules
   in
-  let lhs =
-    List.to_seq syms |> Seq.flat_map term_of_lhs |> List.of_seq
-  in
-  let f l1 =
-    List.map (fun l2 -> cps l1 l2) lhs |> List.flatten
-  in
+  (* Get the lhs of the rules attached to the symbols *)
+  let lhs = List.map lhs_of_symb syms |> List.concat in
+  let f l1 = List.map (fun l2 -> cps l1 l2) lhs |> List.concat in
   List.map f lhs |> List.flatten
