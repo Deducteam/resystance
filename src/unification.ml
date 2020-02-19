@@ -119,13 +119,13 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
       let x, t, u = Bindlib.unbind2 t u in
       let ctx = HoVarSet.add x ctx in
       solve ((u, t) :: tl) s ctx
-    | (Patt(_,x,ar)  ,_) , (t        , _)             ->
+    | (Patt(_,x,ar)  ,_) , (_        , _)             ->
       (* FIXME using a set might be a bad idea (losing order of vars). *)
       let allowed =
         Array.to_list ar |> List.map Basics.to_tvar |> HoVarSet.of_list
       in
-      let t = Terms.lift t in
-      let cond v = HoVarSet.mem v allowed || not @@ Bindlib.occur v t in
+      let u' = Terms.lift u in
+      let cond v = HoVarSet.mem v allowed || not (Bindlib.occur v u') in
       if HoVarSet.for_all cond ctx then elim x u tl s ctx else raise CantUnify
     | (Abst(_)       ,_) , (Symb(_)  , _)             -> raise CantUnify
     | (Abst(_)       ,_) , (_        , _)             -> solve ((u,t)::tl) s ctx
