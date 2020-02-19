@@ -65,9 +65,10 @@ let rec lift : substitution -> term -> term = fun s t ->
   match Basics.get_args t with
   | Patt(_, v, _), ts when indom v s ->
     Basics.add_args (app s v) (List.map (lift s) ts)
-  | Patt(_) as h, ts -> Basics.add_args h (List.map (lift s) ts)
-  | Symb(_) as u, ts -> Basics.add_args u (List.map (lift s) ts)
-  | Abst(a, t)  , ts ->
+  | (Patt(_) as u, ts)
+  | (Symb(_) as u, ts)
+  | (Vari(_) as u, ts) -> Basics.add_args u (List.map (lift s) ts)
+  | (Abst(a, t)  , ts) ->
     (* Substitute into the body *)
     let x, t = Bindlib.unbind t in
     let t = lift s t in
@@ -80,7 +81,8 @@ let rec lift : substitution -> term -> term = fun s t ->
 let rec occurs : vname -> term -> bool = fun v t ->
   match Basics.get_args t with
   | Patt(_, w, _), args -> v = w || List.exists (occurs v) args
-  | Symb(_)      , args -> List.exists (occurs v) args
+  | Symb(_)      , args
+  | Vari(_)      , args -> List.exists (occurs v) args
   | _ -> assert false
 
 exception CantUnify
@@ -105,8 +107,7 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
      *  q(t1, ..., tn) =? q(u1, ..., un)  *)
     | (Symb(_)       ,ts), (Symb(_)  ,us)             ->
       solve (List.combine ts us @ tl) s ctx
-    | (Symb(_)       ,_) , (_        , _)             ->
-      solve ((u, t) :: tl) s ctx
+    | (Symb(_)       ,_) , (_        , _)             -> solve ((u,t)::tl) s ctx
     (* -----------
      *   &x =? v   *)
     | (Patt(_) as v  ,_) , (t        , _) when v = t  -> solve tl s ctx
@@ -127,8 +128,10 @@ let rec solve : (term * term) list -> substitution -> HoVarSet.t -> substitution
       let cond v = HoVarSet.mem v allowed || not @@ Bindlib.occur v t in
       if HoVarSet.for_all cond ctx then elim x u tl s ctx else raise CantUnify
     | (Abst(_)       ,_) , (Symb(_)  , _)             -> raise CantUnify
-    | (Abst(_)       ,_) , (_        , _)             ->
-      solve ((u, t) :: tl) s ctx
+    | (Abst(_)       ,_) , (_        , _)             -> solve ((u,t)::tl) s ctx
+    | (Vari(x)       ,_) , (Vari(y)  , _)             ->
+      if Bindlib.eq_vars x y then solve tl s ctx else raise CantUnify
+    | (Vari(_)       ,_) , (Symb(_)  , _)             -> raise CantUnify
     | _                                               -> assert false
     end
   | [] -> s
