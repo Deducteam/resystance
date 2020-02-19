@@ -14,8 +14,7 @@ let sig_of_file : string -> Sign.t = fun fname ->
 (** [syms_of_sig s] returns the list of symbols of signature [s]. *)
 let syms_of_sig : Sign.t -> Terms.sym list = fun sign ->
   Timed.(!(sign.sign_symbols)) |>
-  StrMap.to_seq |> Seq.map snd |> Seq.map fst |>
-  List.of_seq
+  StrMap.bindings |> List.map snd |> List.map fst
 
 let spec =
   Arg.align []

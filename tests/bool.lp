@@ -1,9 +1,9 @@
 // Data type of booleans.
 
-symbol const B : TYPE
+constant symbol B : TYPE
 
-symbol const true  : B
-symbol const false : B
+constant symbol true  : B
+constant symbol false : B
 
 // Boolean negation.
 
@@ -36,6 +36,6 @@ definition bool_impl a b ≔
   bool_or b (bool_neg a)
 
 definition bool_xor  a b ≔
-  let a_and_not_b = bool_and a (bool_neg b) in
-  let b_and_not_a = bool_and b (bool_neg a) in
+  let a_and_not_b ≔ bool_and a (bool_neg b) in
+  let b_and_not_a ≔ bool_and b (bool_neg a) in
   bool_or a_and_not_b b_and_not_a
