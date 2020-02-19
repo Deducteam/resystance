@@ -21,7 +21,6 @@ let rec deep_untref : term -> term = fun t ->
 let unify : term -> term -> U.substitution option = fun t u ->
   let t = deep_untref t in
   let u = deep_untref u in
-  Format.printf "Unifiying [%a =? %a]\n" Print.pp t Print.pp u;
   try Some(Unification.unify t u)
   with Unification.CantUnify -> None
 

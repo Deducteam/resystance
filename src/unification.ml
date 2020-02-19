@@ -144,4 +144,5 @@ and elim : vname -> term -> (term * term) list -> substitution -> HoVarSet.t
     ((x, t) :: (List.map (fun (v, u) -> (v, xt u)) s)) ctx
 
 let unify : term -> term -> substitution = fun t u ->
+  log_unif "unifying [%a] =? [%a]" Print.pp t Print.pp u;
   solve [(t, u)] [] HoVarSet.empty
