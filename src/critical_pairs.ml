@@ -25,20 +25,30 @@ let unify : term -> term -> U.substitution option = fun t u ->
   with Unification.CantUnify -> None
 
 (** [subterms_of t] returns the subterms of term [t] which are not rewriting
-    variables. *)
+    variables.
+
+    [subterms_of (f a b) = [(f a b); a; b]]. *)
 let rec subterms_of : term -> term list = fun t ->
   match Basics.get_args t with
-  | Meta(_, _)   , _ -> []
-  | Patt(_, _, _), _ -> []
-  | Symb(_, _), args
-  | Abst(_, _), args
-  | Vari(_)   , args -> t :: (List.map subterms_of args |> List.concat)
-  | _ -> assert false
+  | Meta(_)  , _    -> []
+  | Patt(_)  , _    -> []
+  | Symb(_)  , args
+  | Vari(_)  , args -> t :: (List.map subterms_of args |> List.concat)
+  | Abst(_,u), []   ->
+    let _, u = Bindlib.unbind u in
+    t :: subterms_of u
+  | Abst(_)  , _    -> failwith "Pattern not in β normal form"
+  | _               -> assert false
 
-(** [sizeof t] computes the size of term [t] (number of symbols). *)
-let rec sizeof : term -> int = fun t ->
-  let _, tl = Basics.get_args t in
-  List.fold_right (fun e acc -> sizeof e + acc) tl 1
+(** [sizeof_nomv t] computes the size of term [t] (number of symbols). *)
+let rec sizeof_nomv : term -> int = fun t ->
+  match Basics.get_args t with
+  | Abst(_, t), [] ->
+    let _, t = Bindlib.unbind t in
+    1 + sizeof_nomv t
+  | Abst(_)   , _  -> failwith "Pattern not in β normal form"
+  | Patt(_)   , tl -> List.fold_right (fun e acc -> sizeof_nomv e + acc) tl 0
+  | _         , tl -> List.fold_right (fun e acc -> sizeof_nomv e + acc) tl 1
 
 (** [cps l1 l2] searches for critical peaks involving lhs [l1] and
     subterms of lhs [l2].  A returned quadruple [(l1r, l2r, ls, s)]
@@ -51,10 +61,11 @@ let cps : term -> term -> (term * term * term * U.substitution) list =
   fun l1 l2 ->
   let l1 = U.rename l1 in
   let l2 = U.rename l2 in
-  let l1size = sizeof l1 in
+  let l1size = sizeof_nomv l1 in
   subterms_of l2
-  (* sizeof t = sizeof l1 <=> t = l1 (because t is a subterm of l1) *)
-  |> List.filter (fun t -> l1size <> (sizeof t))
+  (* sizeof_nomv t = sizeof_nomv l1 <=> t = l1 *)
+  (* FIXME be more rigorous and prove previous statement *)
+  |> List.filter (fun t -> l1size <> (sizeof_nomv t))
   |> List.filter_map (unify l1)
   |> List.map (fun s -> (l1, l2, U.lift s l2, s))
 

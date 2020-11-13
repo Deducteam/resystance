@@ -12,6 +12,7 @@ doc:
 
 tests: bin
 	_build/install/default/bin/dkritic tests/critical_pairs.lp
+	_build/install/default/bin/dkritic tests/cpho.lp
 
 uninstall:
 	$(DUNE) uninstall
