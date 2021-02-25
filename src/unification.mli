@@ -22,6 +22,9 @@ val pp_subst : Format.formatter -> substitution -> unit
 val lift : substitution -> Terms.term -> Terms.term
 (** [lift s t] applies substitution [s] to term [t]. *)
 
+(*val lz_lift : substitution -> Terms.term -> Terms.term*)
+(** [lift s t] applies substitution [s] to term [t] (recursively!). *)
+
 (** {2 Unification} *)
 
 exception CantUnify
@@ -31,3 +34,4 @@ val unify : Terms.term -> Terms.term -> substitution
 (** [unify t u] returns a substitution [s] such that [ts = us].
 
     @raise CantUnify if [t] and [u] are not unifyable. *)
+

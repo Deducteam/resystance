@@ -1,5 +1,6 @@
 open Core (* LambdaPi core *)
-open Extra
+open Lplib.Base
+open Lplib.Extra
 
 module D = Distribution
 
@@ -115,7 +116,7 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
   let rec sot : term -> int = function
     | Appl(u, v)    -> (sot u) + (sot v)
     | Abst(_, u)    -> let _, u = Bindlib.unbind u in sot u + 1
-    | Symb(_, _)    -> 1
+    | Symb(_)    -> 1
     | Vari(_)       -> 1
     | Patt(_, _, _) -> 1
     | Meta(_, _)    -> 1
