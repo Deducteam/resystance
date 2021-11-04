@@ -1,25 +1,25 @@
 open Core
 open Lplib
-
+open Common.Debug
 open Timed
-open Terms
+open Term
 
 module U = Unification
 
-let log_cp = Console.new_logger 'k' "krit" "critical pairs"
-let log_cp = log_cp.Console.logger
+let log_cp = new_logger 'k' "krit" "critical pairs"
+let log_cp = log_cp.logger
 
 (* It is possible to be more subtle than that, removing refs from
    head symbols should be enough. *)
 (** [deep_untref t] removes all references from term [t]. *)
 let rec deep_untref : term -> term = fun t ->
-  match Basics.get_args t with
+  match Term.get_args t with
   | TRef(t), args ->
     begin match !t with
     | None    -> assert false
-    | Some(t) -> Basics.add_args t (List.map deep_untref args)
+    | Some(t) -> Term.add_args t (List.map deep_untref args)
     end
-  | t      , args -> Basics.add_args t (List.map deep_untref args)
+  | t      , args -> Term.add_args t (List.map deep_untref args)
 
 (** [unify t u] returns a unifier of [t =? u] or [None]. *)
 let unify : term -> term -> U.substitution option = fun t u ->
@@ -35,7 +35,7 @@ let pp_path_elt = Format.pp_print_int
 (** [subterms_of t] returns the subterms of term [t] which are not rewriting
     variables. *)
 (*let rec subterms_of : path -> term -> (path * term) list = fun p t ->
-  match Basics.get_args t with
+  match Term.get_args t with
   | Meta(_, _)   , _ -> []
   | Patt(_, _, _), _ -> []
   | Symb(_, _), args
@@ -63,20 +63,20 @@ let rec subterms_of : path -> term -> (path * term) list = fun p t ->
     match p with
       [] -> f t
     | i::p ->
-       let (s,l) = Basics.get_args t in
+       let (s,l) = Term.get_args t in
        (match List.cut l i  with
-         (l1,a::l2) -> Basics.add_args s (l1@apply p a::l2)
+         (l1,a::l2) -> Term.add_args s (l1@apply p a::l2)
         | _ -> assert false) in
   apply p t*)
 let apply_to_subterm f p t =
   let rec apply p t =
     match p, unfold t with
       [],t -> f t
-    | 0::p, Appl(t1,t2) -> Appl(apply p t1, t2)
-    | 1::p, Appl(t1,t2) -> Appl(t1, apply p t2)
+    | 0::p, Appl(t1,t2) -> mk_Appl(apply p t1, t2)
+    | 1::p, Appl(t1,t2) -> mk_Appl(t1, apply p t2)
     | 0::p, Abst(t1,u) ->
        let (x,u) = Bindlib.unbind u in
-       Bindlib.(unbox(_Abst(box t1)(bind_var x (Terms.lift (apply p u)))))
+       Bindlib.(unbox(_Abst(box t1)(bind_var x (Term.lift (apply p u)))))
     | _,_ -> assert false in
   apply p t
 
@@ -86,7 +86,7 @@ let apply_rule r lhs =
   let rec match_lhs pl tl =
     match pl, tl with
     | (p::pl), (t::tl) ->
-       (match Basics.get_args p, Basics.get_args t with
+       (match Term.get_args p, Term.get_args t with
         | (Patt(Some i,_,_),[]), _ ->
            e.(i) <- TE_Some Bindlib.(unbox(bind_mvar[||](box t)));
            match_lhs pl tl
@@ -103,14 +103,14 @@ let apply_rule r lhs =
     | [], [] ->
        Bindlib.msubst r.rhs e
     | _ -> assert false in
-  let (_,args) = Basics.get_args lhs in
+  let (_,args) = Term.get_args lhs in
   match_lhs r.lhs args
 
 let rename_patt_var pm vn =
   match Hashtbl.find_opt pm vn with
   | None ->
      let vnuntagged = (*Filename.remove_extension*) vn in
-     let v = Bindlib.new_var Terms.mkfree vnuntagged in
+     let v = new_tvar vnuntagged in
      Hashtbl.add pm vn v;
      v
   | Some(n) -> n
@@ -122,13 +122,13 @@ let patt_to_var : term -> term = fun te ->
     | Appl(t, u) ->
       let t = loop t in
       let u = loop u in
-      Appl(t, u)
+      mk_Appl(t, u)
     | Patt(_, v, [||]) ->
       let name = rename_patt_var pm v in
-      Vari name
+      mk_Vari name
     | Abst(t1,t2) ->
        let (x,u) = Bindlib.unbind t2 in
-       Bindlib.(unbox(_Abst(box (loop t1))(bind_var x (Terms.lift (loop u)))))
+       Bindlib.(unbox(_Abst(box (loop t1))(bind_var x (Term.lift (loop u)))))
     | Patt(_, _, _) -> assert false
     | t -> t
   in
@@ -186,7 +186,7 @@ let cps : sym list -> critical_pair list = fun syms ->
     | None -> !(s.sym_rules) in
   let term_of_lhs s =
     List.to_seq (rules_of_sym s)
-    |> Seq.map (fun l -> (s,l), Basics.add_args (Symb s) l.lhs)
+    |> Seq.map (fun l -> (s,l), Term.add_args (mk_Symb s) l.lhs)
   in
   let lhs =
     List.to_seq syms |> Seq.flat_map term_of_lhs |> List.of_seq
@@ -196,7 +196,7 @@ let cps : sym list -> critical_pair list = fun syms ->
   in
   let res = map_pair_keep_order cps_sym lhs @
               (List.map f lhs |> List.flatten) in
-  if !Console.log_enabled then
+  if !Common.Debug.log_enabled then
     log_cp "%d symbols, %d rules, %d pairs\n"
       (List.length syms) (List.length lhs) (List.length res);
   res

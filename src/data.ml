@@ -43,14 +43,14 @@ let count_symbols : Sign.t -> int = fun sign ->
 
 (** [count_rules s] count the number of rules declared in the signature [s]. *)
 let count_rules : Sign.t -> int = fun sign ->
-  let rul_of_sym (sy:Terms.sym) = List.length Timed.(!(sy.sym_rules)) in
+  let rul_of_sym (sy:Term.sym) = List.length Timed.(!(sy.sym_rules)) in
   StrMap.fold (fun _ (sy, _) -> (+) (rul_of_sym sy))
     Timed.(!(sign.sign_symbols)) 0
 
 (** [nonlin r] returns true if rule [r] is left nonlinear. *)
-let nonlin : Terms.rule -> bool = fun { lhs ; _ } ->
+let nonlin : Term.rule -> bool = fun { lhs ; _ } ->
   let slots =
-    List.filter_map (function Terms.Patt(io, _, _) -> io | _ -> None) lhs
+    List.filter_map (function Term.Patt(io, _, _) -> io | _ -> None) lhs
   in
   let slots_uniq = List.sort_uniq Int.compare slots in
   List.compare_lengths slots slots_uniq <> 0
@@ -58,7 +58,7 @@ let nonlin : Terms.rule -> bool = fun { lhs ; _ } ->
 (** [count_nlrules s] counts the number of non left linear rules in
     signature [s]. *)
 let count_nlrules : Sign.t -> int = fun sign ->
-  let nr_of_sym (sy:Terms.sym) =
+  let nr_of_sym (sy:Term.sym) =
     List.fold_left
       (fun acc rul -> if nonlin rul then acc + 1 else acc)
       0
@@ -67,9 +67,9 @@ let count_nlrules : Sign.t -> int = fun sign ->
     Timed.(!(sign.sign_symbols)) 0
 
 (** [ho r] returns true if rule [r] contains higher order terms. *)
-let ho : Terms.rule -> bool = fun { lhs ; _ } ->
+let ho : Term.rule -> bool = fun { lhs ; _ } ->
   let rec ho te =
-    let open Terms in
+    let open Term in
     match te with
     | Appl(t, u) -> ho t || ho u
     | Abst(_, _) -> true
@@ -79,7 +79,7 @@ let ho : Terms.rule -> bool = fun { lhs ; _ } ->
 (** [count_horules s] counts the number of higher order rules in
     signature [s]. *)
 let count_horules : Sign.t -> int = fun sign ->
-  let ho_of_sym (sy:Terms.sym) =
+  let ho_of_sym (sy:Term.sym) =
     List.fold_left
       (fun acc rul -> if ho rul then acc + 1 else acc)
       0
@@ -88,8 +88,10 @@ let count_horules : Sign.t -> int = fun sign ->
     Timed.(!(sign.sign_symbols)) 0
 
 (** [height_of_rules r] returns the height of rule [r]. *)
-let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
-  let open Terms in
+
+
+let height_of_rule : Term.rule -> int = fun { lhs ; _ } ->
+  let open Term in
   (* [depth t] returns the depth of term [t] defined as
      - [depth f t1 ... tn = 1 + max {depth t | t in t1 ... tn}]
      - [depth x = 0]. *)
@@ -98,21 +100,30 @@ let height_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
     | Abst(_, u) -> let _, u = Bindlib.unbind u in
       depth u + 1
     | _          -> 0 in
-  depth (Basics.add_args Kind lhs) - 1
+  depth (Term.add_args mk_Kind lhs) - 1
+
+
+
 
 (** [rules_heights s] returns the distribution of heights of rules in
     signature [s]. *)
 let rules_heights : Sign.t -> D.t = fun sign ->
-  let heights_of_sym (sy:Terms.sym) : int list =
+  let heights_of_sym (sy:Term.sym) : int list =
     List.map height_of_rule Timed.(!(sy.sym_rules)) in
   D.of_list @@
   StrMap.fold (fun _ (sy, _) acc -> heights_of_sym sy @ acc)
     Timed.(!(sign.sign_symbols)) []
 
+
+
+
+
+
+
 (** [size_of_rule r] returns the size of the lhs of [r], the size
  ** being the number of (sub) terms. *)
-let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
-  let open Terms in
+let size_of_rule : Term.rule -> int = fun { lhs ; _ } ->
+  let open Term in
   let rec sot : term -> int = function
     | Appl(u, v)    -> (sot u) + (sot v)
     | Abst(_, u)    -> let _, u = Bindlib.unbind u in sot u + 1
@@ -122,12 +133,12 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
     | Meta(_, _)    -> 1
     | Kind          -> 0 (* Really? *)
     | _             -> assert false in
-  sot (Basics.add_args Kind lhs) - (sot Kind)
+  sot (Term.add_args mk_Kind lhs) - (sot mk_Kind)
 
 (** [rules_arity s] returns the distribution of the arity of the root symbol
     of the rules in signature [s]. *)
 let rules_arity : Sign.t -> D.t = fun sign ->
-  let open Terms in
+  let open Term in
   let sizes_of_sym (sy:sym) : int list =
     List.map (fun { lhs ; _ } -> List.length lhs) Timed.(!(sy.sym_rules)) in
   D.of_list @@
@@ -138,7 +149,7 @@ let rules_arity : Sign.t -> D.t = fun sign ->
  ** signature [s]. *)
 let rules_sizes : Sign.t -> D.t = fun sign ->
   let sizes_of_sym sy =
-    List.map size_of_rule Timed.(Terms.(!(sy.sym_rules))) in
+    List.map size_of_rule Timed.(Term.(!(sy.sym_rules))) in
   D.of_list @@
     StrMap.fold (fun _ (sy, _) acc -> sizes_of_sym sy @ acc)
   Timed.(!(sign.sign_symbols)) []

@@ -1,5 +1,8 @@
 open Core
+open Lplib
 
+open Handle.Compile
+open Common.Console
 module F = Format
 
 (** Whether to output as a csv line. *)
@@ -10,10 +13,8 @@ let separate : bool ref = ref false
 
 (** [sig_of_file f] returns the signature of the file path [f]. *)
 let sig_of_file : string -> Sign.t = fun fname ->
-  let mp = Files.file_to_module fname in
-  let module C = Console in
-  C.handle_exceptions(fun()-> ignore(Compile.compile true mp));
-  Files.PathMap.find mp Sign.(Timed.(!loaded))
+  compile_file fname
+
 
 let spec =
   let sp = Arg.align
@@ -26,7 +27,7 @@ let spec =
   List.sort (fun (f1, _, _) (f2, _, _) -> String.compare f1 f2) sp
 
 let _ =
-  Console.set_default_verbose 0 ;
+  set_default_verbose 0 ;
   let usage = Printf.sprintf "Usage: %s [OPTIONS] [FILES]" Sys.argv.(0) in
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;

@@ -2,9 +2,9 @@
 
 open Core
 open Lplib.Base
-open Terms
+open Term
 
-val log_cp : 'a Console.outfmt -> 'a
+val log_cp : 'a outfmt -> 'a
    
 type path_elt = int
 type path = path_elt list

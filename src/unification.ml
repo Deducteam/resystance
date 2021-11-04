@@ -1,7 +1,7 @@
 open Core
-open Terms
-
-let log_unif = Console.new_logger 'v' "suni" "syntactic unification"
+open Term
+open Common.Debug
+let log_unif = new_logger 'v' "suni" "syntactic unification"
 let log_unif = log_unif.logger
 
 (** Name of rewriting variables.  We distinguish (bound) variables due
@@ -39,10 +39,10 @@ let rename : term -> term = fun te ->
     | Appl(t, u) ->
       let seen, t = loop seen t in
       let seen, u = loop seen u in
-      seen, Appl(t, u)
+      seen, mk_Appl(t, u)
     | Patt(a, v, b) ->
       let seen, name = rename seen v in
-      seen, Patt(a, name, b)
+      seen, mk_Patt(a, name, b)
     | t -> seen, t
   in
   loop VnMap.empty te |> snd
@@ -58,15 +58,15 @@ let indom : vname -> substitution -> bool = fun vn->
 let app : substitution -> vname -> term = fun s x -> List.assoc x s
 
 let rec lift : substitution -> term -> term = fun s t ->
-  match Basics.get_args t with
+  match Term.get_args t with
   | Patt(_, v, _), ts when indom v s ->
-    Basics.add_args (app s v) (List.map (lift s) ts)
-  | Patt(_) as h, ts -> Basics.add_args h (List.map (lift s) ts)
-  | Symb(_) as u , ts -> Basics.add_args u (List.map (lift s) ts)
+    Term.add_args (app s v) (List.map (lift s) ts)
+  | Patt(_) as h, ts -> Term.add_args h (List.map (lift s) ts)
+  | Symb(_) as u , ts -> Term.add_args u (List.map (lift s) ts)
   | Abst(t1,t2), ts ->
      let (x,u) = Bindlib.unbind t2 in
-     Basics.add_args
-       (Bindlib.(unbox(_Abst(box t1)(bind_var x (Terms.lift (lift s u))))))
+     Term.add_args
+       (Bindlib.(unbox(_Abst(box t1)(bind_var x (Term.lift (lift s u))))))
        (List.map (lift s) ts)
   | Vari _, _ -> t
   | _ ->
@@ -77,26 +77,26 @@ let rec lift : substitution -> term -> term = fun s t ->
   fun s x -> let t = List.assoc x s in lazy (lz_lift s t)
 
 and lz_lift : substitution -> term -> term = fun s t ->
-  match Basics.get_args t with
+  match Term.get_args t with
   | Patt(_, v, _), ts when indom v s ->
-    Basics.add_args (Lazy.force (lz_app s v)) (List.map (lz_lift s) ts)
-  | Patt(_) as h, ts -> Basics.add_args h (List.map (lz_lift s) ts)
-  | Symb(_) as u , ts -> Basics.add_args u (List.map (lz_lift s) ts)
+    Term.add_args (Lazy.force (lz_app s v)) (List.map (lz_lift s) ts)
+  | Patt(_) as h, ts -> Term.add_args h (List.map (lz_lift s) ts)
+  | Symb(_) as u , ts -> Term.add_args u (List.map (lz_lift s) ts)
   | _ -> assert false*)
 (*
 let lz_lift s t =
   let ls = List.map (fun (v,t) -> (v,lazy(proc t)) in
   let rec proc t =
-  match Basics.get_args t with
+  match Term.get_args t with
   | Patt(_, v, _), ts when indom v s ->
-    Basics.add_args (Lazy.force (List.assoc v ls)) (List.map proc ts)
-  | Patt(_)|Symb(_) as h, ts -> Basics.add_args h (List.map proc ts)
+    Term.add_args (Lazy.force (List.assoc v ls)) (List.map proc ts)
+  | Patt(_)|Symb(_) as h, ts -> Term.add_args h (List.map proc ts)
   | _ -> assert false
  *)     
         
 (** [occurs v t] is true iff variable [v] appears in term [t]. *)
 let rec occurs : vname -> term -> bool = fun v t ->
-  match Basics.get_args t with
+  match Term.get_args t with
   | Patt(_, w, _), args -> v = w || List.exists (occurs v) args
   | Symb(_)      , args -> List.exists (occurs v) args
   | Vari _       , args -> List.exists (occurs v) args
@@ -116,8 +116,8 @@ let rec solve : (term * term) list -> substitution -> substitution =
   fun eqs s ->
   match eqs with
   | (t, u) :: tl ->
-    log_unif "solve [%a =? %a]" Print.pp t Print.pp u;
-    begin match (Basics.get_args t, Basics.get_args u) with
+    log_unif "solve [%a =? %a]" Print.pp_term t Print.pp_term u;
+    begin match (Term.get_args t, Term.get_args u) with
     | (Abst _,_), (Symb _,_) | (Symb _,_),(Abst _,_) -> raise CantUnify (* eta! *)
     | (Symb(q)   ,ts), (Symb(r),us) when q != r || List.compare_lengths ts us <> 0 ->
        raise CantUnify
