@@ -1,5 +1,8 @@
 open Core
+open Lplib
 
+open Handle.Compile
+open Common.Console
 module F = Format
 
 (** Whether to output as a csv line. *)
@@ -7,6 +10,11 @@ let csv : bool ref = ref false
 
 (** Whether to output the stats of each file as csv lines. *)
 let separate : bool ref = ref false
+
+(** [sig_of_file f] returns the signature of the file path [f]. *)
+let sig_of_file : string -> Sign.t = fun fname ->
+  compile_file fname
+
 
 let spec =
   let sp = Arg.align
@@ -19,12 +27,12 @@ let spec =
   List.sort (fun (f1, _, _) (f2, _, _) -> String.compare f1 f2) sp
 
 let _ =
-  Console.set_default_verbose 0 ;
+  set_default_verbose 0 ;
   let usage = Printf.sprintf "Usage: %s [OPTIONS] [FILES]" Sys.argv.(0) in
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
   files := List.rev !files ;
-  let sigs = List.map Compile.compile_file !files in
+  let sigs = List.map sig_of_file !files in
   let stats = List.map Data.of_sig sigs in
   let ppf = F.std_formatter in
   let pp =
