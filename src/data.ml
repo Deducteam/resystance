@@ -79,7 +79,8 @@ let ho : Terms.rule -> bool = fun { lhs ; _ } ->
 (** [count_horules s] counts the number of higher order rules in
     signature [s]. *)
 let count_horules : Sign.t -> int = fun sign ->
-  let ho_of_sym (sy:Terms.sym) =
+  let ho_of_sym (sy:Term.sym) =
+  
     List.fold_left
       (fun acc rul -> if ho rul then acc + 1 else acc)
       0

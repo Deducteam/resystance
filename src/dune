@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 (executable
  (name dkstats)
  (public_name dkstats)
@@ -9,3 +10,11 @@
  (public_name dkritic)
  (modules ("dkritic" "critical_pairs" "unification"))
  (libraries lambdapi.core timed bindlib))
+=======
+ (executable
+ (name reduction)
+ (public_name reduction)
+ (modules ("reduction" "unification"))
+ (libraries lambdapi.core lambdapi.handle timed bindlib))
+ 
+>>>>>>> Stashed changes

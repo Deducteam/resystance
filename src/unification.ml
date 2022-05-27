@@ -1,8 +1,8 @@
 open Core
-open Terms
-
-let log_unif = Console.new_logger 'v' "suni" "syntactic unification"
-let log_unif = log_unif.logger
+open Term
+open Common.Logger
+let log_unif = (Common.Logger.make 'v' "suni" "syntactic unification").pp
+(*let log_unif = log_unif.logger*)
 
 (** Name of rewriting variables.  We distinguish (bound) variables due
     to higher order and rewrite variables.  In [\x.f(X, x)], [X] is a
@@ -15,7 +15,7 @@ type substitution = (vname * term) list
 
 let pp_subst : Format.formatter -> substitution -> unit = fun fmt s ->
   let pp_sep fmt () = Format.fprintf fmt ", " in
-  let pp_subst fmt (vn, t) = Format.fprintf fmt "%s := %a" vn Print.pp_term t in
+  let pp_subst fmt (vn, t) = Format.fprintf fmt "%s := %a" vn Print.term t in
   Format.pp_print_list ~pp_sep pp_subst fmt s
 
 (** [rename vm nm] returns a fresh name if [nm] is not bound in [vm],
@@ -70,7 +70,7 @@ let rec lift : substitution -> term -> term = fun s t ->
        (List.map (lift s) ts)
   | Vari _, _ -> t
   | _ ->
-     Format.eprintf "cannot lift %a\n" Print.pp_term t;
+     Format.eprintf "cannot lift %a\n" Print.term t;
      assert false
 
 (*let rec lz_app : substitution -> vname -> term Lazy.t =
@@ -116,8 +116,8 @@ let rec solve : (term * term) list -> substitution -> substitution =
   fun eqs s ->
   match eqs with
   | (t, u) :: tl ->
-    log_unif "solve [%a =? %a]" Print.pp t Print.pp u;
-    begin match (Basics.get_args t, Basics.get_args u) with
+    log_unif "solve [%a =? %a]" Print.term t Print.term u;
+    begin match (Term.get_args t, Term.get_args u) with
     | (Abst _,_), (Symb _,_) | (Symb _,_),(Abst _,_) -> raise CantUnify (* eta! *)
     | (Symb(q)   ,ts), (Symb(r),us) when q != r || List.compare_lengths ts us <> 0 ->
        raise CantUnify
@@ -127,7 +127,7 @@ let rec solve : (term * term) list -> substitution -> substitution =
     | (Patt(_) as v,_) , (t        , _) when v = t  -> solve tl s
     | (Patt(_,x,_) ,_) , (_        , _)             -> elim x u tl s
     | _                                             ->
-       Format.eprintf "Unification failed:\n %a != %a\n" Print.pp_term t Print.pp_term u;
+       Format.eprintf "Unification failed:\n %a != %a\n" Print.term t Print.term u;
        assert false
     end
   | [] -> s
