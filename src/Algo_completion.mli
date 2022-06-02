@@ -25,7 +25,7 @@ liste Pairs, celui de la liste Règles, une règle de réécriture et l’ensemb
 correspondant à tous les calculs d’extensions déjà réalisés. Elles renvoient alors la
 nouvelle liste Pairs et le nouvel ensemble d’extensions.*)
 
-val pair11 : ((Term.sym, Term.term,Term.term, Term.rule),(Term.sym, Term.term,Term.term, Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> (Term.sym, Term.term,Term.term, Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym, Term.term,Term.term, Term.rule),(Term.sym, Term.term,Term.term, Term.rule)) list
+val pair11 : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> (Term.sym, Term.term,Term.term, Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
 
 val pair17 : ((Term.sym, Term.term,Term.term, Term.rule),(Term.sym, Term.term,Term.term, Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> (Term.sym, Term.term,Term.term, Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym, Term.term,Term.term, Term.rule),(Term.sym, Term.term,Term.term, Term.rule)) list
 
