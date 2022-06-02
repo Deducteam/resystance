@@ -39,9 +39,9 @@ règles. Chaque paire critique est alors convertie en une nouvelle équation ré
 ensuite dans l’algorithme.*)
 
 
-val fonction1 : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
-val fonction2 : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
-val fonction_finale : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
+val fonction1 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
+val fonction2 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
+val fonction_finale : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
 
 (*Cette fonction crée l’algorithme en s’appuyant sur les différentes fonctions créées
 en amont. Une description est donnée étape par étape par Peterson.*)
