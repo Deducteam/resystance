@@ -1,16 +1,3 @@
-
-(executable
- (name dkstats)
- (public_name dkstats)
- (modules ("dkstats" "data" "distribution"))
- (libraries lambdapi.core timed bindlib))
-
-(executable
- (name dkritic)
- (public_name dkritic)
- (modules ("dkritic" "critical_pairs" "unification"))
- (libraries lambdapi.core timed bindlib))
-
  (executable
  (name reduction)
  (public_name reduction)
