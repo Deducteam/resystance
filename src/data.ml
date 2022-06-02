@@ -1,5 +1,6 @@
 open Core (* LambdaPi core *)
-open Extra
+open Lplib.Base
+open Lplib.Extra
 
 module D = Distribution
 
@@ -78,7 +79,8 @@ let ho : Terms.rule -> bool = fun { lhs ; _ } ->
 (** [count_horules s] counts the number of higher order rules in
     signature [s]. *)
 let count_horules : Sign.t -> int = fun sign ->
-  let ho_of_sym (sy:Terms.sym) =
+  let ho_of_sym (sy:Term.sym) =
+  
     List.fold_left
       (fun acc rul -> if ho rul then acc + 1 else acc)
       0
@@ -115,7 +117,7 @@ let size_of_rule : Terms.rule -> int = fun { lhs ; _ } ->
   let rec sot : term -> int = function
     | Appl(u, v)    -> (sot u) + (sot v)
     | Abst(_, u)    -> let _, u = Bindlib.unbind u in sot u + 1
-    | Symb(_, _)    -> 1
+    | Symb(_)    -> 1
     | Vari(_)       -> 1
     | Patt(_, _, _) -> 1
     | Meta(_, _)    -> 1

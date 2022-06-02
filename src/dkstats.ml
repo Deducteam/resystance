@@ -8,6 +8,13 @@ let csv : bool ref = ref false
 (** Whether to output the stats of each file as csv lines. *)
 let separate : bool ref = ref false
 
+(** [sig_of_file f] returns the signature of the file path [f]. *)
+let sig_of_file : string -> Sign.t = fun fname ->
+  let mp = Files.file_to_module fname in
+  let module C = Console in
+  C.handle_exceptions(fun()-> ignore(Compile.compile true mp));
+  Files.PathMap.find mp Sign.(Timed.(!loaded))
+
 let spec =
   let sp = Arg.align
       [ ( "--csv"
@@ -24,7 +31,7 @@ let _ =
   let files = ref [] in
   Arg.parse spec (fun s -> files := s :: !files) usage ;
   files := List.rev !files ;
-  let sigs = List.map Compile.compile_file !files in
+  let sigs = List.map sig_of_file !files in
   let stats = List.map Data.of_sig sigs in
   let ppf = F.std_formatter in
   let pp =
