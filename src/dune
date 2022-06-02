@@ -1,6 +1,6 @@
  (executable
- (name reduction)
- (public_name reduction)
- (modules ("reduction" "unification"))
+ (name algo_completion)
+ (public_name algo_completion)
+ (modules ("algo_completion" "unification"))
  (libraries lambdapi.core lambdapi.handle timed bindlib))
  
