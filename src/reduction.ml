@@ -335,7 +335,7 @@ if eqs<>[] then
     let eqs = retire2 eqs (s,t)  in
     if appartientens eqs (s_,t_) (**faire attention car c'est une égalité au sein de T normalement*) then algorec eqs regles pairs extensions 
     else
-        let rec intermediaire s_ t_ regles = (**Eq modulo ou la comparaison de deux termes  dans Terms*)
+        let rec intermediaire s_ t_ regles pairs extensions= (**Eq modulo ou la comparaison de deux termes  dans Terms*)
         if Eval.eq_modulo [] s_ t_ then algorec eqs regles pairs extensions 
         else 
             let lambda, rho = if (Term.cmp s_ t_>0) then (s_ ,t_) else  (t_, s_)  in
@@ -351,7 +351,7 @@ if eqs<>[] then
             let k=ref (List.length regles) in
             let a=ref 1 in
 
-            let rec intermediaire2 regles  a k= if !a > !k then algorec eqs regles  pairs extensions else
+            let rec intermediaire2 regles pairs extensions a k= if !a > !k then algorec eqs regles  pairs extensions else
                 let r= choisit (!a-1) regles in 
                 let sym,s,t, rule= r in 
 
@@ -364,7 +364,7 @@ if eqs<>[] then
                 let regles = ajoute (sym, s, t) regles in
 
                 if (Term.cmp s s_ =0) && (Term.cmp t t_ =0) then 
-                    (a:= (!a+1) ; intermediaire2 regles  a k)
+                    (a:= (!a+1) ; intermediaire2 regles pairs extensions a k)
                 else 
                 begin
                 if (appartientens  eqs (s_, t_)) && (appartientens eqs (t_, s_)) (**attention car égalité dans T*) then 
@@ -372,16 +372,16 @@ if eqs<>[] then
                     let r= dernier_elem regles in
                     let regles = del r regles in
                     k:=(!k-1);
-                    intermediaire2 regles  a k)
+                    intermediaire2 regles pairs extensions a k)
                 else
                     let pairs, extensions = pair17 pairs regles r extensions in
                     let r= dernier_elem regles in
                     let regles = del r regles in
-                    intermediaire s_ t_ regles 
+                    intermediaire s_ t_ regles pairs extensions
                 end in 
-            intermediaire2 regles  a k
+            intermediaire2 regles pairs extensions a k
         in
-        intermediaire s_ t_ regles
+        intermediaire s_ t_ regles pairs extensions
 else
         if pairs<>[] then
             begin
@@ -390,7 +390,7 @@ else
             let eqs = fonction_finale ( lambda1, rho1) (lambda2, rho2) extensions in 
             algorec eqs regles pairs extensions
             end
-        else regles (**On a fini*)in
+        else regles in
 algorec eqs regles pairs [];;
 
 
