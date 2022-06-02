@@ -5,7 +5,7 @@ Cette fonction permet de traduire un couple (lhs,rhs) en un objet de type rule
 ayant comme membre gauche lhs et comme membre droit rhs. Pour assurer cette
 traduction, on passe par la création de p_terms.*)
 
-val new_rule : (Term.term, Term.term) -> Term.rule
+val new_rule : Term.term-> Term.term -> Term.rule
 
 (*Les extensions sont des outils permettant de déterminer les différentes paires
 critiques pouvant se former lors de l’ajout d’une nouvelle règle de réécriture avec
