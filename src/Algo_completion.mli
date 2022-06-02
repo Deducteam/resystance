@@ -14,9 +14,9 @@ fonctions extension_A et extension_AC qui prennent en compte respectivement les 
 fonction extension prend en argument une liste de règles et donne l’extension globale
 de celle-ci : {extension_AC(règles)}U{extension_A(règles)}U{règles}*)
 
-val extension_A : Term.sym -> Term.term ->Term.term -> Term.rule -> (Term.sym, Term.term,Term.term, Term.rule) list
+val extension_A : Term.sym -> Term.term ->Term.term -> Term.rule -> (Term.sym* Term.term*Term.term* Term.rule) list
 
-val extension_AC : Term.sym* Term.term*Term.term* Term.rule -> (Term.sym, Term.term,Term.term, Term.rule) list
+val extension_AC : Term.sym* Term.term*Term.term* Term.rule -> (Term.sym* Term.term*Term.term* Term.rule) list
 
 (*L’algorithme s’appuie sur le remplissage itératif d’un ensemble nommé Pairs.
 Ce remplissage se fait en suivant certaines règles. Ces étapes sont automatisées à
@@ -25,9 +25,9 @@ liste Pairs, celui de la liste Règles, une règle de réécriture et l’ensemb
 correspondant à tous les calculs d’extensions déjà réalisés. Elles renvoient alors la
 nouvelle liste Pairs et le nouvel ensemble d’extensions.*)
 
-val pair11 : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> (Term.sym* Term.term*Term.term* Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
+val pair11 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym* Term.term*Term.term* Term.rule) list -> (Term.sym* Term.term*Term.term* Term.rule) -> (Term.sym* Term.term*Term.term* Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list
 
-val pair17 : ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> (Term.sym* Term.term*Term.term* Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
+val pair17 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym* Term.term*Term.term* Term.rule) list -> (Term.sym* Term.term*Term.term* Term.rule) -> (Term.sym* Term.term*Term.term* Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list
 
 
 (*Fonctions permettent d’appliquer les étapes 21 à 24 de l’algorithme sur le
@@ -39,11 +39,11 @@ règles. Chaque paire critique est alors convertie en une nouvelle équation ré
 ensuite dans l’algorithme.*)
 
 
-val fonction1 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
-val fonction2 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term,Term.term) list
-val fonction_finale : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list
+val fonction1 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term*Term.term) list
+val fonction2 : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> (Term.term*Term.term) list
+val fonction_finale : ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule))-> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list
 
 (*Cette fonction crée l’algorithme en s’appuyant sur les différentes fonctions créées
 en amont. Une description est donnée étape par étape par Peterson.*)
 
-val algo : (Term.term, Term.term) list -> (Term.sym, Term.term,Term.term, Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule),(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym, Term.term,Term.term, Term.rule) list
+val algo : (Term.term*Term.term) list -> (Term.sym* Term.term*Term.term* Term.rule) list -> ((Term.sym* Term.term*Term.term* Term.rule)*(Term.sym* Term.term*Term.term* Term.rule)) list -> (Term.sym* Term.term*Term.term* Term.rule) list
