@@ -5,24 +5,6 @@ On suppose pour l'instant que l'on a un ordre sur les termes et qu'on a un algor
 On definit une theorie equationnelle comme un ensemble de couples. Si A+B, on a (a,b) et (b,a). *)
 
 
-(*FAIT*)
-
-(* il faut implementer une fonction donnant un des plus petit element et le retire si possible: smallest ()  FAIT *)
-(* il faut une fonction qui retire (a,b) et (b,a) de l'ensemble des equations : suppr inclu dans smallest() FAIT*)
-(*Il faut une fonction qui verifie que (a,bo) est dans eqs: appartient() FAIT *)
-(*On va devoir implementer une fonction permettant de retirer une regle de Regles *)
-(*On suppose qu'on a une fonction retire A B qui donne l'ensemble A\B *)
-
-
-(*A Faire *)
-
-(*Il faut mettre une fonction qui puisse transformer les variables en pattern et  *)
-(*On doit ecrire une fonction qui transforme une regle en son extension*)
-(*On a besoin d'une fonction qui à un terme associe toutes ses variables *)
-(*On va supposer qu'on a dejà des ensembles AC, A et C *)
-(*On suppose qu'il existe une fonction qui à une regle donne le sym du lhs *)
-(*Modifier le dtree *)
-
 open Core
 open Term
 open Timed
@@ -395,38 +377,3 @@ algorec eqs regles pairs [];;
 
 
 
-
-(*On va calculer des paire critiques
-
-
-Pour déterminer les unifications, on pourrait utiliser la fonction unify de unification (unicité ?)
-
-il faut pour les autres parties déterminer des paires critiques entre les deux règles *)
-
-
-
-    (*Finir cette fonction qui fait la 2eme partie de la fin, on doit tout parcourir*)
-
-
-
-
-
-(**Il existe une fonction Tree.update_dtree dans tree qui prend une règle et qui update son dtree ==> pratique, en plus, elle utilise la fonction lazy qui permet d'appliquer la fonction que quand on a besoin de son résultat. Si ce 'est jamais le cas, on ne l'applique jamais)
-Il existe également une fonction add_rule au sein de sign.ml mais il faut un symbole de signature, il faut regarder comment générer ce symbole en regardant des exemples d'utilisation
-On peut voir différent exemple dans test/rewriting.ml ou handle/command.ml
-
-Qu'est qu'une configuration==> il y a au sein de eval.ml un tel type qui est définit. Lorsqu'on cherche à mettre sous forme normale, si on cehrche à vérifier une égalité, il peut etre plus efficace de faire par réccurence élément de tête par élément de tête.
-Dans le cas d'une inégalité, il faut potentiellement mieux chercher la forme snf
-
-Il faut regarder eq_modulo qui fait étape par étape, on pourrait essayre de faire pareil pour la comparaison d'égalité*)
-
-(**On va commencer par regarder comment comparer avec des inégalités : En réalité ce n'eest pas utile ici
-
-
-
-Pour le symbole de signature, il faut utiliser Sig_state, mais il faudrait essayer de comprendre comment il fonctionne (en fait on suppose que la signature est une donnée du problème
-*
-
-
-Il y a un fichier Sig_state dans core
-*)
