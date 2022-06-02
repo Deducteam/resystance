@@ -14,7 +14,7 @@ fonctions extension_A et extension_AC qui prennent en compte respectivement les 
 fonction extension prend en argument une liste de règles et donne l’extension globale
 de celle-ci : {extension_AC(règles)}U{extension_A(règles)}U{règles}*)
 
-val extension_A : Term.sym -> Term.term ->Term.term -> Term.rule-> -> (Term.sym, Term.term,Term.term, Term.rule) list
+val extension_A : Term.sym -> Term.term ->Term.term -> Term.rule -> (Term.sym, Term.term,Term.term, Term.rule) list
 
 val extension_AC : (Term.sym, Term.term,Term.term, Term.rule) -> (Term.sym, Term.term,Term.term, Term.rule) list
 
